@@ -55,45 +55,58 @@
 
         .cell {
             position: relative;
-            /* We calculate width based on the 11-column grid */
             width: 100%; 
+            /* On laptop, we cap the width so digits don't drift too far apart */
+            max-width: 60px; 
             aspect-ratio: 1 / 1.5;
             display: flex;
             justify-content: center;
             align-items: center;
+            margin: 0 auto; /* Centers the digits within their column */
         }
 
         .dim, .bright {
-            /* 7vw means the font width is tied to the screen width */
-            font-size: 7.5vw; 
+            /* Laptop size */
+            font-size: 8vh; 
             position: absolute;
             font-family: 'DSEG7', monospace;
             line-height: 1;
-            /* Force the character to stay within its 1/11th slice of the screen */
-            max-width: 100%;
             text-align: center;
         }
+
+        /* Keep your existing colors and glow */
+        .dim { color: #100000; z-index: 1; }
+        .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
         /* --- MOBILE TUNING --- */
         @media (max-width: 767px) {
             .scoreboard { 
-                width: 98vw; /* Stretch to the very edges of the phone */
+                width: 98vw; 
+                /* Add actual gaps between the columns */
+                column-gap: 4px; 
                 grid-template-rows: 5vh auto 5vh auto; 
-                column-gap: 1px; /* The tiniest sliver of black between digits */
+            }
+            .cell {
+                /* Remove the laptop max-width for mobile */
+                max-width: none; 
             }
             .label {
                 font-size: 2.5vh; 
                 padding-top: 0.5vh; 
             }
             .dim, .bright { 
-                font-size: 8vw; /* Adjusted for the 98vw container */
+                /* Shrink font slightly more to force horizontal space */
+                font-size: 6.5vw; 
             }
             .nudge { transform: translateX(1%); }
         }
 
-        /* --- LAPTOP --- */
+        /* --- LAPTOP TUNING --- */
         @media (min-width: 768px) {
-            .scoreboard { width: 90vw; }
+            .scoreboard { 
+                width: 70vw; /* Narrower overall width keeps digits closer */
+                column-gap: 2px;
+            }
         }
 
         /* --- DIAGNOSTICS (Can be removed once working) --- */
