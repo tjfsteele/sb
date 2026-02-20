@@ -14,45 +14,73 @@
             height: 100vh; 
             margin: 0; 
             overflow: hidden;
-            font-family: 'DSEG7', monospace;
+            font-family: Arial, sans-serif; /* Proportional font for labels */
         }
         
-        /* The Grid: 11 columns, 2 rows */
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
-            grid-template-rows: repeat(2, 1fr);
+            /* 4 rows now: Label1, Digits1, Label2, Digits2 */
+            grid-template-rows: auto auto auto auto;
             gap: 2px;
-            width: 95vw;    /* Use most of the width */
-            max-width: 800px; /* But don't let it get absurdly huge on tablets */
+            width: 95vw;
+            max-width: 900px;
+        }
+
+        .label {
+            color: white;
+            text-transform: uppercase;
+            font-size: 2.5vw;
+            font-weight: bold;
+            text-align: center;
+            padding-bottom: 5px;
+            align-self: end;
         }
 
         .cell {
             position: relative;
-            aspect-ratio: 1 / 1.5; /* Slightly narrower digits */
+            aspect-ratio: 1 / 1.5;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-family: 'DSEG7', monospace;
         }
 
         .dim, .bright {
-            font-size: 10vw; /* Reduced from 12vw */
+            font-size: 10vw;
             position: absolute;
             line-height: 1;
-            text-align: center;
         }
 
         .dim { color: #100000; z-index: 1; }
         .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* Media query for landscape or larger screens to prevent overflow */
+        /* Label Positioning */
+        /* Span 3 columns each to match the 3-digit groups */
+        .col-1 { grid-column: 1 / span 3; }
+        .col-2 { grid-column: 5 / span 3; }
+        .col-3 { grid-column: 9 / span 3; }
+
         @media (min-height: 500px) {
-            .dim, .bright { font-size: 15vh; }
+            .dim, .bright { font-size: 14vh; }
+            .label { font-size: 3vh; }
         }
     </style>
 </head>
 <body>
-    <div class="scoreboard" id="board"></div>
+    <div class="scoreboard" id="board">
+        <div class="label col-1">Batter</div>
+        <div class="label col-2">Total</div>
+        <div class="label col-3">Batter</div>
+        
+        <div id="row1" style="display: contents;"></div>
+
+        <div class="label col-1">1st Inns</div>
+        <div class="label col-2">Wickets</div>
+        <div class="label col-3">Overs</div>
+
+        <div id="row2" style="display: contents;"></div>
+    </div>
 
     <script>
         const layout = "888 888 888888  88  88".split('');
@@ -61,35 +89,34 @@
             try {
                 const response = await fetch('score.txt?t=' + Date.now());
                 const rawText = await response.text();
-                // Clean the string - remove anything that isn't a character
                 const cleanText = rawText.replace(/<br>|\n|\r/g, '').split('');
                 
-                const board = document.getElementById('board');
-                board.innerHTML = ''; 
+                const r1Container = document.getElementById('row1');
+                const r2Container = document.getElementById('row2');
+                r1Container.innerHTML = ''; 
+                r2Container.innerHTML = '';
 
                 layout.forEach((layoutChar, i) => {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    
                     if (layoutChar === '8') {
                         const dim = document.createElement('div');
-                        dim.className = 'dim';
-                        dim.textContent = '8';
+                        dim.className = 'dim'; dim.textContent = '8';
                         cell.appendChild(dim);
                     }
-                    
                     const scoreChar = cleanText[i] || " ";
                     if (scoreChar !== " ") {
                         const bright = document.createElement('div');
-                        bright.className = 'bright';
-                        bright.textContent = scoreChar;
+                        bright.className = 'bright'; bright.textContent = scoreChar;
                         cell.appendChild(bright);
                     }
-                    board.appendChild(cell);
+                    
+                    // Inject into Row 1 for first 11 chars, Row 2 for next 11
+                    if (i < 11) r1Container.appendChild(cell);
+                    else r2Container.appendChild(cell);
                 });
             } catch (e) { console.error("Update error"); }
         }
-
         setInterval(updateScore, 2000);
         window.onload = updateScore;
     </script>
