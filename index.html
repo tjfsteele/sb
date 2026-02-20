@@ -24,17 +24,17 @@
             grid-template-columns: repeat(11, 1fr); 
             grid-template-rows: auto auto auto auto;
             gap: 0.5vh; 
-            /* Reduced overall width for mobile safety margin */
             width: 85vw; 
             max-width: 900px;
         }
 
+        /* Unified Label Style for Laptop */
         .label {
             grid-column: span 3;
             text-transform: uppercase;
             font-weight: bold;
             text-align: center;
-            font-size: 5vh; 
+            font-size: 5vh; /* Standard large size for laptop */
             margin-bottom: 0.8vh;
             white-space: nowrap;
         }
@@ -66,10 +66,11 @@
         /* --- MOBILE TUNING --- */
         @media (max-width: 767px) {
             .scoreboard {
-                width: 85vw; /* This shrinks the whole board by 10% */
+                width: 80vw; /* Further reduction of overall footprint */
             }
             .label {
-                font-size: 3.2vh; /* Unified size for all labels */
+                /* Reduced another 10% from 3.2vh to 2.8vh */
+                font-size: 2.8vh; 
             }
             .nudge {
                 transform: translateX(4%);
@@ -103,10 +104,13 @@
             try {
                 const response = await fetch('score.txt?t=' + Date.now());
                 const rawText = await response.text();
+                // Clean the text to ensure the grid logic is 1:1 with layout
                 const cleanText = rawText.replace(/[^0-9 ]/g, '').split('');
+                
                 const r1 = document.getElementById('row1');
                 const r2 = document.getElementById('row2');
                 r1.innerHTML = ''; r2.innerHTML = '';
+
                 layout.forEach((lChar, i) => {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
