@@ -29,22 +29,26 @@
         }
 
         .label {
-            /* Centers the label across the 3 columns it spans */
             grid-column: span 3;
             text-transform: uppercase;
             font-weight: bold;
             text-align: center;
-            
-            /* Doubled the font size: was 2.5vh, now 5vh */
             font-size: 5vh; 
             margin-bottom: 0.8vh;
-            letter-spacing: 1px;
+            white-space: nowrap;
         }
         
         /* Rigid alignment for the 3 groups */
         .col1 { grid-column: 1 / span 3; }
         .col2 { grid-column: 5 / span 3; }
         .col3 { grid-column: 9 / span 3; }
+
+        /* Nudge labels right to center over 2-digit groups */
+        /* Since a 3-column slot has a leading space for 2-digit values, 
+           moving the label right by half a column width (approx 4.5%) centers it. */
+        .nudge {
+            transform: translateX(4.5%);
+        }
 
         .cell {
             position: relative;
@@ -55,7 +59,6 @@
         }
 
         .dim, .bright {
-            /* Slightly reduced digit size to accommodate the 2x larger labels */
             font-size: 10vh; 
             position: absolute;
             font-family: 'DSEG7', monospace;
@@ -65,10 +68,8 @@
         .dim { color: #100000; z-index: 1; }
         .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* Handling the smaller "1st Inns" label to prevent it touching the top row */
         .small-label { font-size: 3.5vh; }
 
-        /* Adjustments for Laptop screens */
         @media (min-width: 1000px) {
             .dim, .bright { font-size: 8vw; }
             .label { font-size: 3.5vw; }
@@ -85,24 +86,20 @@
         <div style="grid-column: 1 / -1; height: 3vh;"></div>
 
         <div class="label col1 small-label">1st Inns</div>
-        <div class="label col2">Wickets</div>
-        <div class="label col3">Overs</div>
+        <div class="label col2 nudge">Wickets</div>
+        <div class="label col3 nudge">Overs</div>
         <div id="row2" style="display: contents;"></div>
     </div>
-
     <script>
         const layout = "888 888 888888  88  88".split('');
         async function updateScore() {
             try {
                 const response = await fetch('score.txt?t=' + Date.now());
                 const rawText = await response.text();
-                // Strip everything except numbers and spaces
                 const cleanText = rawText.replace(/[^0-9 ]/g, '').split('');
-                
                 const r1 = document.getElementById('row1');
                 const r2 = document.getElementById('row2');
                 r1.innerHTML = ''; r2.innerHTML = '';
-
                 layout.forEach((lChar, i) => {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
