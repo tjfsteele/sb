@@ -74,11 +74,10 @@
                     const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
 
                     const rowsData = [
-                        // Nudge player 1 right by adding a leading space and narrowing the middle gap
                         " " + pad(vals[0], 3) + "    " + pad(vals[1], 3),        
                         pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3), 
-                        // Nudge Wickets (vals[5]) right by adding a space before it
-                        pad(vals[10], 3) + "  " + pad(vals[5], 2) + "   " + pad(vals[6], 2), 
+                        // Row 2: Space shifted to move Wickets but keep Overs anchored
+                        pad(vals[10], 3) + "   " + pad(vals[5], 2) + "  " + pad(vals[6], 2), 
                         pad(vals[7], 3) + " " + pad(vals[11], 3) + " " + pad(vals[13], 3)  
                     ];
 
