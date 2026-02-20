@@ -8,13 +8,27 @@
         body { background: black; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; }
         
         .scoreboard { 
-            display: grid; grid-template-columns: repeat(11, 1fr); 
-            grid-template-rows: repeat(4, 5vh auto); /* 4 pairs of Label + Digits */
-            width: 700px; column-gap: 2px; 
+            display: grid; 
+            grid-template-columns: repeat(11, 1fr); 
+            /* 4 data rows, but only 3 label rows */
+            grid-template-rows: auto 7vh auto 7vh auto 7vh auto; 
+            width: 700px; 
+            column-gap: 2px; 
         }
 
-        .label { grid-column: span 3; text-transform: uppercase; font-weight: bold; text-align: center; font-size: 3vh; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; color: #888; }
-        .label.main { font-size: 5vh; color: white; padding-top: 1vh; }
+        .label { 
+            grid-column: span 3; 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            text-align: center; 
+            font-size: 4.5vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-end; 
+            padding-bottom: 8px; 
+            color: white; 
+            white-space: nowrap;
+        }
         
         .col1 { grid-column: 1 / span 3; } .col2 { grid-column: 5 / span 3; } .col3 { grid-column: 9 / span 3; }
         .nudge { transform: translateX(4.5%); }
@@ -24,36 +38,38 @@
         .dim { color: #100000; z-index: 1; }
         .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* Smaller digits for Batter Numbers and Extras row */
-        .small-digits .dim, .small-digits .bright { font-size: 5vh; }
+        /* Make player numbers slightly smaller so they don't compete with scores */
+        .player-no .dim, .player-no .bright { font-size: 5vh; }
 
         @media (max-width: 767px) {
-            .scoreboard { width: 96vw; column-gap: 1px; }
+            .scoreboard { width: 96vw; column-gap: 1.5px; }
             .dim, .bright { font-size: 8.5vw; }
-            .small-digits .dim, .small-digits .bright { font-size: 6vw; }
-            .label { font-size: 2vh; }
-            .label.main { font-size: 2.8vh; }
+            .player-no .dim, .player-no .bright { font-size: 5.5vw; }
+            .label { font-size: 2.5vh; padding-bottom: 4px; }
             .nudge { transform: translateX(1%); }
         }
     </style>
 </head>
 <body>
     <div class="scoreboard" id="board">
-        <div class="label col1">No.</div><div class="label col2"></div><div class="label col3">No.</div>
-        <div id="row0" class="small-digits" style="display: contents;"></div>
+        <div id="row0" class="player-no" style="display: contents;"></div>
 
-        <div class="label main col1">Batter</div><div class="label main col2">Total</div><div class="label main col3">Batter</div>
+        <div class="label col1">Batter</div><div class="label col2">Total</div><div class="label col3">Batter</div>
         <div id="row1" style="display: contents;"></div>
 
-        <div class="label main col1">1st Inns</div><div class="label main col2 nudge">Wickets</div><div class="label main col3 nudge">Overs</div>
+        <div style="grid-column: 1 / -1; height: 3vh;"></div>
+
+        <div class="label col1">1st Inns</div><div class="label col2 nudge">Wickets</div><div class="label col3 nudge">Overs</div>
         <div id="row2" style="display: contents;"></div>
 
+        <div style="grid-column: 1 / -1; height: 3vh;"></div>
+
         <div class="label col1">Extras</div><div class="label col2">Target</div><div class="label col3">DLS Par</div>
-        <div id="row3" class="small-digits" style="display: contents;"></div>
+        <div id="row3" style="display: contents;"></div>
     </div>
 
     <script>
-        // Define which slots have "8" backgrounds (4 rows of 11)
+        // Layout for 4 rows of 11 columns
         const layout = "888     888 888 888 888888  88  88 888 888 888".split('');
         const NPOINT_ID = "e5ab2c288d26e7ce23ca"; 
 
@@ -65,18 +81,18 @@
                 if (vals && vals.length > 0) {
                     const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
 
-                    // Row 0: Line 1 (L Bat No), Blank, Line 2 (R Bat No)
+                    // Row 0: Player Numbers (Line 1 & 2)
                     const r0Str = pad(vals[0], 3) + "     " + pad(vals[1], 3);
-                    // Row 1: Line 3 (L Bat), Line 5 (Total), Line 4 (R Bat)
+                    // Row 1: Batter Scores (Line 3, 5, 4)
                     const r1Str = pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3);
-                    // Row 2: Line 11 (1st Inns), Line 6 (Wkts), Line 7 (Overs)
+                    // Row 2: Match Progress (Line 11, 6, 7)
                     const r2Str = pad(vals[10], 3) + " " + pad(vals[5], 2) + "   " + pad(vals[6], 2);
-                    // Row 3: Line 8 (Extras), Line 12 (Target), Line 14 (DLS)
+                    // Row 3: Context (Line 8, 12, 14)
                     const r3Str = pad(vals[7], 3) + " " + pad(vals[11], 3) + " " + pad(vals[13], 3);
 
                     const fullText = (r0Str + r1Str + r2Str + r3Str).split('');
-                    const rows = [document.getElementById('row0'), document.getElementById('row1'), 
-                                  document.getElementById('row2'), document.getElementById('row3')];
+                    const rowIds = ['row0', 'row1', 'row2', 'row3'];
+                    const rows = rowIds.map(id => document.getElementById(id));
                     
                     rows.forEach(r => r.innerHTML = '');
 
@@ -94,8 +110,6 @@
                             b.className = 'bright'; b.textContent = sChar;
                             cell.appendChild(b);
                         }
-                        
-                        // Row distribution logic (11 chars per row)
                         const rowIndex = Math.floor(i / 11);
                         rows[rowIndex].appendChild(cell);
                     });
