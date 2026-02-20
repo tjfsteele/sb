@@ -19,13 +19,13 @@
             overflow: hidden;
         }
 
+        /* --- BASE STYLES (Laptop First) --- */
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
-            /* Fixed heights to prevent squashing */
             grid-template-rows: 9vh auto 9vh auto;
-            width: 80vw; 
-            max-width: 900px;
+            width: 700px; /* FIXED WIDTH for laptop keeps digits together */
+            column-gap: 2px; /* Tight gap for laptop */
         }
 
         .label {
@@ -56,45 +56,32 @@
         .cell {
             position: relative;
             width: 100%; 
-            /* On laptop, we cap the width so digits don't drift too far apart */
-            max-width: 60px; 
             aspect-ratio: 1 / 1.5;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 0 auto; /* Centers the digits within their column */
         }
 
         .dim, .bright {
-            /* Laptop size */
             font-size: 8vh; 
             position: absolute;
             font-family: 'DSEG7', monospace;
             line-height: 1;
-            text-align: center;
         }
-
-        /* Keep your existing colors and glow */
-        .dim { color: #100000; z-index: 1; }
-        .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
         /* --- MOBILE TUNING --- */
         @media (max-width: 767px) {
             .scoreboard { 
-                width: 92vw; /* Pulled in slightly from the edges */
-                column-gap: 1.5px; /* Tightened gap for a cohesive look */
+                width: 94vw; /* Fluid width for mobile */
+                column-gap: 1px; /* The absolute minimum gap to prevent blobs */
                 grid-template-rows: 5vh auto 5vh auto; 
             }
-            .cell {
-                max-width: none; 
+            .dim, .bright { 
+                font-size: 8vw; /* Fills the narrow columns */
             }
             .label {
-                font-size: 2.5vh; 
-                padding-top: 0.5vh; 
-            }
-            .dim, .bright { 
-                /* Bumping size back up to 7.2vw to fill the tighter columns */
-                font-size: 7.2vw; 
+                font-size: 2.8vh; 
+                padding-top: 1vh; 
             }
             .nudge { transform: translateX(1%); }
         }
