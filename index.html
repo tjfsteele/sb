@@ -107,14 +107,24 @@
 
     <script>
         const layout = "888 888 888888  88  88".split('');
+
         async function updateScore() {
             try {
-                const response = await fetch('score.txt?t=' + Date.now());
+                // The '?t=' + Date.now() is the "Cache Buster"
+                // It makes the URL score.txt?t=1708422400... so it's always unique
+                const response = await fetch('score.txt?t=' + Date.now(), {
+                    cache: "no-store" // Explicitly tell the browser not to save this
+                });
+                
+                if (!response.ok) throw new Error('Network response was not ok');
+                
                 const rawText = await response.text();
                 const cleanText = rawText.replace(/[^0-9 ]/g, '').split('');
+                
                 const r1 = document.getElementById('row1');
                 const r2 = document.getElementById('row2');
                 r1.innerHTML = ''; r2.innerHTML = '';
+                
                 layout.forEach((lChar, i) => {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
@@ -132,8 +142,12 @@
                     if (i < 11) r1.appendChild(cell);
                     else r2.appendChild(cell);
                 });
-            } catch (e) {}
+            } catch (e) {
+                console.error("Fetch failed, retrying...", e);
+            }
         }
+
+        // Run every 2 seconds
         setInterval(updateScore, 2000);
         window.onload = updateScore;
     </script>
