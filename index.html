@@ -22,11 +22,12 @@
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
-            /* We explicitly set the label rows (1 and 3) to be taller */
-            grid-template-rows: 8vh auto 8vh auto;
+            /* Label rows now have significant fixed height */
+            grid-template-rows: 10vh auto 10vh auto;
             width: 80vw; 
             max-width: 900px;
-            align-items: center;
+            /* Ensure nothing inside the grid gets clipped by its container */
+            overflow: visible; 
         }
 
         .label {
@@ -35,9 +36,14 @@
             font-weight: bold;
             text-align: center;
             font-size: 5vh; 
-            /* Large line-height creates the extra 20% vertical room */
-            line-height: 1.6; 
             white-space: nowrap;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Force the box to be tall and allow letters to spill out if needed */
+            height: 100%;
+            overflow: visible;
+            padding-bottom: 2vh; 
         }
         
         .col1 { grid-column: 1 / span 3; }
@@ -68,12 +74,12 @@
         @media (max-width: 767px) {
             .scoreboard { 
                 width: 85vw; 
-                /* Increase label row height on mobile specifically */
-                grid-template-rows: 6vh auto 6vh auto; 
+                grid-template-rows: 8vh auto 8vh auto; 
             }
             .label {
                 font-size: 2.8vh; 
-                line-height: 2.0; /* This provides the extra 20%+ vertical room */
+                /* Adding extra bottom padding specifically for mobile descenders */
+                padding-bottom: 3vh; 
             }
             .nudge { transform: translateX(4%); }
             .dim, .bright { font-size: 9vh; }
@@ -92,7 +98,7 @@
         <div class="label col3">Batter</div>
         <div id="row1" style="display: contents;"></div>
 
-        <div style="grid-column: 1 / -1; height: 2vh;"></div>
+        <div style="grid-column: 1 / -1; height: 1vh;"></div>
 
         <div class="label col1">1st Inns</div>
         <div class="label col2 nudge">Wickets</div>
