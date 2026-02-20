@@ -5,48 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf'); }
-        body { 
-            background: black; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
-            font-family: 'DSEG7', monospace;
+        body { background: black; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        
+        /* The container for the two rows */
+        .scoreboard { font-family: 'DSEG7', monospace; font-size: 12vw; line-height: 1.2; }
+        .row { display: flex; justify-content: center; }
+
+        /* The magic: Every character slot is a fixed-width box */
+        .char-slot { 
+            position: relative; 
+            width: 1ch; /* Exactly one character wide */
+            height: 1.2em;
+            text-align: center;
         }
-        .container { position: relative; display: inline-block; }
-        .base-layer { 
-            color: #800000; /* Very dim red "ghost" segments */
-            font-size: 12vw; 
-            line-height: 1.5; 
-            white-space: pre; 
-        }
-        #score { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            color: #f00; /* Bright red active segments */
-            font-size: 12vw; 
-            line-height: 1.5; 
-            white-space: pre; 
-        }
+
+        /* The dim underlay segments (#800000 as requested) */
+        .dim { color: #800000; position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* The bright active segments */
+        .bright { color: #f00; position: absolute; top: 0; left: 0; z-index: 2; }
     </style>
+</head>
+<body>
+    <div class="scoreboard" id="board"></div>
+
     <script>
+        // The layout template to ensure the dim 8s are always there
+        const layout = ["888 888 888", "888  88  88"];
+
         async function updateScore() {
             try {
                 const response = await fetch('score.txt?t=' + Date.now());
-                const text = await response.text();
-                document.getElementById('score').textContent = text;
+                const rawText = await response.text();
+                const lines = rawText.split('\n');
+                const board = document.getElementById('board');
+                board.innerHTML = ''; // Clear current board
+
+                lines.forEach((lineText, rowIndex) => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'row';
+                    
+                    // Match the incoming text against our fixed layout of 8s
+                    const targetLayout = layout[rowIndex] || "";
+                    
+                    for (let i = 0; i < targetLayout.length; i++) {
+                        const slot = document.createElement('div');
+                        slot.className = 'char-slot';
+                        
+                        // Always add the dim background '8' if it's not a layout space
+                        if (targetLayout[i] !== " ") {
+                            slot.innerHTML += `<span class="dim">8</span>`;
+                        }
+                        
+                        // Add the bright character from Python if it exists and isn't a space
+                        const char = lineText[i] || " ";
+                        if (char !== " ") {
+                            slot.innerHTML += `<span class="bright">${char}</span>`;
+                        }
+                        
+                        rowDiv.appendChild(slot);
+                    }
+                    board.appendChild(rowDiv);
+                });
             } catch (e) { console.log("Updating..."); }
         }
+
         setInterval(updateScore, 2000);
         window.onload = updateScore;
     </script>
-</head>
-<body>
-    <div class="container">
-        <div class="base-layer">888 888 888<br>888  88  88</div>
-        <div id="score"></div>
-    </div>
 </body>
 </html>
