@@ -22,12 +22,10 @@
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
-            /* Label rows now have significant fixed height */
-            grid-template-rows: 10vh auto 10vh auto;
+            /* Fixed heights for labels to ensure they can't be squashed */
+            grid-template-rows: 9vh auto 9vh auto;
             width: 80vw; 
             max-width: 900px;
-            /* Ensure nothing inside the grid gets clipped by its container */
-            overflow: visible; 
         }
 
         .label {
@@ -39,11 +37,12 @@
             white-space: nowrap;
             display: flex;
             justify-content: center;
-            align-items: center;
-            /* Force the box to be tall and allow letters to spill out if needed */
+            /* Key Change: Align to TOP to prevent bottom clipping */
+            align-items: flex-start; 
             height: 100%;
-            overflow: visible;
-            padding-bottom: 2vh; 
+            /* Padding top creates the 'headroom' and pushes the text away from digits */
+            padding-top: 1.5vh; 
+            box-sizing: border-box;
         }
         
         .col1 { grid-column: 1 / span 3; }
@@ -74,15 +73,15 @@
         @media (max-width: 767px) {
             .scoreboard { 
                 width: 85vw; 
-                grid-template-rows: 8vh auto 8vh auto; 
+                grid-template-rows: 7vh auto 7vh auto; 
             }
             .label {
                 font-size: 2.8vh; 
-                /* Adding extra bottom padding specifically for mobile descenders */
-                padding-bottom: 3vh; 
+                /* Anchoring to top with padding to center visually */
+                padding-top: 1vh; 
             }
             .nudge { transform: translateX(4%); }
-            .dim, .bright { font-size: 9vh; }
+            .dim, .bright { font-size: 8.5vh; }
         }
 
         /* --- LAPTOP --- */
@@ -98,7 +97,7 @@
         <div class="label col3">Batter</div>
         <div id="row1" style="display: contents;"></div>
 
-        <div style="grid-column: 1 / -1; height: 1vh;"></div>
+        <div style="grid-column: 1 / -1; height: 2vh;"></div>
 
         <div class="label col1">1st Inns</div>
         <div class="label col2 nudge">Wickets</div>
