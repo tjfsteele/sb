@@ -2,9 +2,10 @@
 <html>
 <head>
     <title>Live Scoreboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf'); }
+        
         body { 
             background: black; 
             display: flex; 
@@ -13,50 +14,56 @@
             height: 100vh; 
             margin: 0; 
             overflow: hidden;
+            font-family: 'DSEG7', monospace;
         }
         
-        /* The Grid: 11 equal columns, 2 rows */
+        /* The Grid: 11 columns, 2 rows */
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
             grid-template-rows: repeat(2, 1fr);
-            gap: 5px; /* Tiny gap between digits like a real board */
-            font-family: 'DSEG7', monospace;
-            width: 90vw;
+            gap: 2px;
+            width: 95vw;    /* Use most of the width */
+            max-width: 800px; /* But don't let it get absurdly huge on tablets */
         }
 
         .cell {
             position: relative;
-            aspect-ratio: 1 / 2; /* Scoreboard digits are usually tall */
+            aspect-ratio: 1 / 1.5; /* Slightly narrower digits */
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
         .dim, .bright {
-            font-size: 12vw;
+            font-size: 10vw; /* Reduced from 12vw */
             position: absolute;
             line-height: 1;
             text-align: center;
         }
 
-        .dim { color: #800000; z-index: 1; }
-        .bright { color: #f00; z-index: 2; }
+        /* Your requested #400000 for a very subtle underlay */
+        .dim { color: #400000; z-index: 1; }
+        .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
+
+        /* Media query for landscape or larger screens to prevent overflow */
+        @media (min-height: 500px) {
+            .dim, .bright { font-size: 15vh; }
+        }
     </style>
 </head>
 <body>
     <div class="scoreboard" id="board"></div>
 
     <script>
-        // The skeleton of the board (spaces mean no background '8')
         const layout = "888 888 888888  88  88".split('');
 
         async function updateScore() {
             try {
                 const response = await fetch('score.txt?t=' + Date.now());
                 const rawText = await response.text();
-                // Remove the <br> or \n and just get a clean string of chars
-                const cleanText = rawText.replace(/<br>|\n/g, '').split('');
+                // Clean the string - remove anything that isn't a character
+                const cleanText = rawText.replace(/<br>|\n|\r/g, '').split('');
                 
                 const board = document.getElementById('board');
                 board.innerHTML = ''; 
@@ -65,7 +72,6 @@
                     const cell = document.createElement('div');
                     cell.className = 'cell';
                     
-                    // Add the background "8"
                     if (layoutChar === '8') {
                         const dim = document.createElement('div');
                         dim.className = 'dim';
@@ -73,7 +79,6 @@
                         cell.appendChild(dim);
                     }
                     
-                    // Add the actual score digit
                     const scoreChar = cleanText[i] || " ";
                     if (scoreChar !== " ") {
                         const bright = document.createElement('div');
@@ -81,7 +86,6 @@
                         bright.textContent = scoreChar;
                         cell.appendChild(bright);
                     }
-                    
                     board.appendChild(cell);
                 });
             } catch (e) { console.error("Update error"); }
