@@ -22,10 +22,11 @@
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
-            /* Let the browser define row height naturally */
-            grid-template-rows: repeat(4, auto);
+            /* We explicitly set the label rows (1 and 3) to be taller */
+            grid-template-rows: 8vh auto 8vh auto;
             width: 80vw; 
             max-width: 900px;
+            align-items: center;
         }
 
         .label {
@@ -34,9 +35,8 @@
             font-weight: bold;
             text-align: center;
             font-size: 5vh; 
-            /* line-height 1.2 ensures space for descenders (bottom of letters) */
-            line-height: 1.2; 
-            margin-bottom: 0.5vh;
+            /* Large line-height creates the extra 20% vertical room */
+            line-height: 1.6; 
             white-space: nowrap;
         }
         
@@ -66,11 +66,14 @@
 
         /* --- MOBILE TUNING --- */
         @media (max-width: 767px) {
-            .scoreboard { width: 85vw; }
+            .scoreboard { 
+                width: 85vw; 
+                /* Increase label row height on mobile specifically */
+                grid-template-rows: 6vh auto 6vh auto; 
+            }
             .label {
                 font-size: 2.8vh; 
-                line-height: 1.4; /* Extra height for mobile text */
-                margin-top: 1vh;  /* Push it down slightly from the top edge */
+                line-height: 2.0; /* This provides the extra 20%+ vertical room */
             }
             .nudge { transform: translateX(4%); }
             .dim, .bright { font-size: 9vh; }
@@ -89,7 +92,7 @@
         <div class="label col3">Batter</div>
         <div id="row1" style="display: contents;"></div>
 
-        <div style="grid-column: 1 / -1; height: 3vh;"></div>
+        <div style="grid-column: 1 / -1; height: 2vh;"></div>
 
         <div class="label col1">1st Inns</div>
         <div class="label col2 nudge">Wickets</div>
