@@ -4,20 +4,39 @@
     <title>Live Scoreboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf'); }
-        body { background: black; color: #f00; font-family: 'DSEG7', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        #score { font-size: 15vw; text-align: center; line-height: 1.2; }
+        @font-face { 
+            font-family: 'DSEG7'; 
+            src: url('DSEG7.ttf'); 
+        }
+        body { 
+            background: black; 
+            color: #f00; 
+            font-family: 'DSEG7', monospace; /* Monospace fallback is key */
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+        }
+        #score { 
+            font-size: 12vw; 
+            text-align: center; 
+            line-height: 1.5; 
+            white-space: pre; /* This preserves the spaces exactly as sent */
+            letter-spacing: 2px;
+        }
     </style>
     <script>
         async function updateScore() {
             try {
-                // Fetch the text file we're going to upload from Python
+                // Fetch score.txt with a cache-buster
                 const response = await fetch('score.txt?t=' + Date.now());
                 const text = await response.text();
-                document.getElementById('score').innerHTML = text.replace(/\n/g, '<br>');
+                document.getElementById('score').textContent = text;
             } catch (e) { console.log("Updating..."); }
         }
-        setInterval(updateScore, 2000); // Check for new score every 2 seconds
+        setInterval(updateScore, 2000);
         window.onload = updateScore;
     </script>
 </head>
