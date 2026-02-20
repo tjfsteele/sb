@@ -9,34 +9,42 @@
         body { 
             background: black; 
             display: flex; 
+            flex-direction: column;
             justify-content: center; 
             align-items: center; 
-            min-height: 100vh; 
+            height: 100vh; 
             margin: 0; 
             font-family: Arial, sans-serif;
+            color: white;
+            overflow: hidden;
         }
-        
+
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
             grid-template-rows: auto auto auto auto;
-            gap: 1px; /* Smaller gap for mobile */
-            width: 98vw;
-            padding: 5px;
-            box-sizing: border-box;
+            gap: 0.5vh; 
+            width: 95vw;
+            max-width: 900px;
         }
 
         .label {
-            color: white;
+            /* Centers the label across the 3 columns it spans */
+            grid-column: span 3;
             text-transform: uppercase;
             font-weight: bold;
             text-align: center;
-            align-self: end;
-            /* Scalable font size based on width */
-            font-size: 2.2vw; 
-            padding-bottom: 2px;
-            letter-spacing: 0.5px;
+            
+            /* Doubled the font size: was 2.5vh, now 5vh */
+            font-size: 5vh; 
+            margin-bottom: 0.8vh;
+            letter-spacing: 1px;
         }
+        
+        /* Rigid alignment for the 3 groups */
+        .col1 { grid-column: 1 / span 3; }
+        .col2 { grid-column: 5 / span 3; }
+        .col3 { grid-column: 9 / span 3; }
 
         .cell {
             position: relative;
@@ -44,84 +52,75 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'DSEG7', monospace;
         }
 
         .dim, .bright {
-            font-size: 8.5vw; /* Adjusted for phone width */
+            /* Slightly reduced digit size to accommodate the 2x larger labels */
+            font-size: 10vh; 
             position: absolute;
+            font-family: 'DSEG7', monospace;
             line-height: 1;
         }
 
         .dim { color: #100000; z-index: 1; }
-        .bright { color: #f00; z-index: 2; text-shadow: 0 0 8px rgba(255,0,0,0.5); }
+        .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* Column Spans for Labels */
-        .col-1 { grid-column: 1 / span 3; }
-        .col-2 { grid-column: 5 / span 3; }
-        .col-3 { grid-column: 9 / span 3; }
+        /* Handling the smaller "1st Inns" label to prevent it touching the top row */
+        .small-label { font-size: 3.5vh; }
 
-        /* --- LAPTOP/TABLET ADJUSTMENTS --- */
-        @media (min-width: 768px) {
-            .scoreboard { width: 85vw; max-width: 1000px; gap: 4px; }
-            .label { font-size: 1.8vw; padding-bottom: 8px; }
-            .dim, .bright { font-size: 7.5vw; }
-        }
-
-        /* --- LANDSCAPE MODE FIX (Phones held sideways) --- */
-        @media (max-height: 500px) {
-            .scoreboard { width: auto; height: 95vh; }
-            .label { font-size: 4vh; }
-            .dim, .bright { font-size: 18vh; }
+        /* Adjustments for Laptop screens */
+        @media (min-width: 1000px) {
+            .dim, .bright { font-size: 8vw; }
+            .label { font-size: 3.5vw; }
         }
     </style>
 </head>
 <body>
     <div class="scoreboard" id="board">
-        <div class="label col-1">Batter</div>
-        <div class="label col-2">Total</div>
-        <div class="label col-3">Batter</div>
+        <div class="label col1">Batter</div>
+        <div class="label col2">Total</div>
+        <div class="label col3">Batter</div>
         <div id="row1" style="display: contents;"></div>
 
-        <div class="label col-1">1st Inns</div>
-        <div class="label col-2">Wickets</div>
-        <div class="label col-3">Overs</div>
+        <div style="grid-column: 1 / -1; height: 3vh;"></div>
+
+        <div class="label col1 small-label">1st Inns</div>
+        <div class="label col2">Wickets</div>
+        <div class="label col3">Overs</div>
         <div id="row2" style="display: contents;"></div>
     </div>
 
     <script>
         const layout = "888 888 888888  88  88".split('');
-
         async function updateScore() {
             try {
                 const response = await fetch('score.txt?t=' + Date.now());
                 const rawText = await response.text();
-                // Ensure we handle both string formats (\n or <br>)
-                const cleanText = rawText.replace(/<br>|\n|\r/g, '').split('');
+                // Strip everything except numbers and spaces
+                const cleanText = rawText.replace(/[^0-9 ]/g, '').split('');
                 
-                const r1Container = document.getElementById('row1');
-                const r2Container = document.getElementById('row2');
-                r1Container.innerHTML = ''; 
-                r2Container.innerHTML = '';
+                const r1 = document.getElementById('row1');
+                const r2 = document.getElementById('row2');
+                r1.innerHTML = ''; r2.innerHTML = '';
 
-                layout.forEach((layoutChar, i) => {
+                layout.forEach((lChar, i) => {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    if (layoutChar === '8') {
-                        const dim = document.createElement('div');
-                        dim.className = 'dim'; dim.textContent = '8';
-                        cell.appendChild(dim);
+                    if (lChar === '8') {
+                        const d = document.createElement('div');
+                        d.className = 'dim'; d.textContent = '8';
+                        cell.appendChild(d);
                     }
-                    const scoreChar = cleanText[i] || " ";
-                    if (scoreChar !== " ") {
-                        const bright = document.createElement('div');
-                        bright.className = 'bright'; bright.textContent = scoreChar;
-                        cell.appendChild(bright);
+                    const sChar = cleanText[i] || " ";
+                    if (sChar !== " ") {
+                        const b = document.createElement('div');
+                        b.className = 'bright'; b.textContent = sChar;
+                        cell.appendChild(b);
                     }
-                    if (i < 11) r1Container.appendChild(cell);
-                    else r2Container.appendChild(cell);
+                    if (i < 11) r1.appendChild(cell);
+                    else r2.appendChild(cell);
                 });
-            } catch (e) { console.error("Update error"); }
+            } catch (e) {}
         }
         setInterval(updateScore, 2000);
         window.onload = updateScore;
