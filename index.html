@@ -10,8 +10,8 @@
         .scoreboard { 
             display: grid; 
             grid-template-columns: repeat(11, 1fr); 
-            /* 4 data rows, but only 3 label rows */
-            grid-template-rows: auto 7vh auto 7vh auto 7vh auto; 
+            /* Added explicit 'gap' rows (2vh) into the template for consistent vertical spacing */
+            grid-template-rows: auto 3vh auto 7vh auto 4vh auto 7vh auto; 
             width: 700px; 
             column-gap: 2px; 
         }
@@ -21,11 +21,11 @@
             text-transform: uppercase; 
             font-weight: bold; 
             text-align: center; 
-            font-size: 4.5vh; 
+            font-size: 4.2vh; 
             display: flex; 
             justify-content: center; 
             align-items: flex-end; 
-            padding-bottom: 8px; 
+            padding-bottom: 12px; /* Increased padding to lift labels off digits */
             color: white; 
             white-space: nowrap;
         }
@@ -38,14 +38,14 @@
         .dim { color: #100000; z-index: 1; }
         .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* Make player numbers slightly smaller so they don't compete with scores */
+        /* Batter numbers row sizing */
         .player-no .dim, .player-no .bright { font-size: 5vh; }
 
         @media (max-width: 767px) {
             .scoreboard { width: 96vw; column-gap: 1.5px; }
             .dim, .bright { font-size: 8.5vw; }
             .player-no .dim, .player-no .bright { font-size: 5.5vw; }
-            .label { font-size: 2.5vh; padding-bottom: 4px; }
+            .label { font-size: 2.4vh; padding-bottom: 6px; }
             .nudge { transform: translateX(1%); }
         }
     </style>
@@ -54,22 +54,23 @@
     <div class="scoreboard" id="board">
         <div id="row0" class="player-no" style="display: contents;"></div>
 
+        <div style="grid-column: 1 / -1; height: 1vh;"></div>
+
         <div class="label col1">Batter</div><div class="label col2">Total</div><div class="label col3">Batter</div>
         <div id="row1" style="display: contents;"></div>
 
-        <div style="grid-column: 1 / -1; height: 3vh;"></div>
+        <div style="grid-column: 1 / -1; height: 5vh;"></div>
 
         <div class="label col1">1st Inns</div><div class="label col2 nudge">Wickets</div><div class="label col3 nudge">Overs</div>
         <div id="row2" style="display: contents;"></div>
 
-        <div style="grid-column: 1 / -1; height: 3vh;"></div>
+        <div style="grid-column: 1 / -1; height: 5vh;"></div>
 
         <div class="label col1">Extras</div><div class="label col2">Target</div><div class="label col3">DLS Par</div>
         <div id="row3" style="display: contents;"></div>
     </div>
 
     <script>
-        // Layout for 4 rows of 11 columns
         const layout = "888     888 888 888 888888  88  88 888 888 888".split('');
         const NPOINT_ID = "e5ab2c288d26e7ce23ca"; 
 
@@ -81,13 +82,9 @@
                 if (vals && vals.length > 0) {
                     const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
 
-                    // Row 0: Player Numbers (Line 1 & 2)
                     const r0Str = pad(vals[0], 3) + "     " + pad(vals[1], 3);
-                    // Row 1: Batter Scores (Line 3, 5, 4)
                     const r1Str = pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3);
-                    // Row 2: Match Progress (Line 11, 6, 7)
                     const r2Str = pad(vals[10], 3) + " " + pad(vals[5], 2) + "   " + pad(vals[6], 2);
-                    // Row 3: Context (Line 8, 12, 14)
                     const r3Str = pad(vals[7], 3) + " " + pad(vals[11], 3) + " " + pad(vals[13], 3);
 
                     const fullText = (r0Str + r1Str + r2Str + r3Str).split('');
