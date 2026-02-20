@@ -50,8 +50,13 @@
 
         .nudge { transform: translateX(4.5%); }
 
+        .dim { color: #100000; z-index: 1; }
+        .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
+
         .cell {
             position: relative;
+            /* We calculate width based on the 11-column grid */
+            width: 100%; 
             aspect-ratio: 1 / 1.5;
             display: flex;
             justify-content: center;
@@ -59,36 +64,31 @@
         }
 
         .dim, .bright {
-            font-size: 10vh; 
+            /* 7vw means the font width is tied to the screen width */
+            font-size: 7.5vw; 
             position: absolute;
             font-family: 'DSEG7', monospace;
             line-height: 1;
+            /* Force the character to stay within its 1/11th slice of the screen */
+            max-width: 100%;
+            text-align: center;
         }
-
-        .dim { color: #100000; z-index: 1; }
-        .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
         /* --- MOBILE TUNING --- */
         @media (max-width: 767px) {
             .scoreboard { 
-                width: 95vw; /* Use more of the screen width */
-                grid-template-rows: 6vh auto 6vh auto; 
-                gap: 2px; /* Small gap between grid cells */
+                width: 98vw; /* Stretch to the very edges of the phone */
+                grid-template-rows: 5vh auto 5vh auto; 
+                column-gap: 1px; /* The tiniest sliver of black between digits */
             }
             .label {
-                font-size: 2.5vh; /* Slightly smaller to ensure fit */
+                font-size: 2.5vh; 
                 padding-top: 0.5vh; 
             }
-            .nudge { transform: translateX(2%); }
-            
             .dim, .bright { 
-                font-size: 7vh; /* Shrunk from 8.5vh to prevent overlap */
-                letter-spacing: 1px; /* Prevents digits from touching */
+                font-size: 8vw; /* Adjusted for the 98vw container */
             }
-            
-            .cell {
-                aspect-ratio: 1 / 1.3; /* Slightly shorter cells for mobile */
-            }
+            .nudge { transform: translateX(1%); }
         }
 
         /* --- LAPTOP --- */
