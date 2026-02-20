@@ -26,54 +26,51 @@
         <div id="row2" style="display: contents;"></div>
     </div>
 
-    <iframe id="secretFrame" src="score.txt" style="display:none;"></iframe>
-
     <script>
+        // REPLACE WITH YOUR ACTUAL GITHUB URL
+        const rawUrl = "https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/score.txt";
+        
         const layout = "888 888 888888  88  88".split('');
 
-        function updateBoard(rawText) {
-            const cleanText = rawText.replace(/[^0-9 ]/g, '').split('');
-            const r1 = document.getElementById('row1');
-            const r2 = document.getElementById('row2');
-            r1.innerHTML = ''; r2.innerHTML = '';
-            
-            layout.forEach((lChar, i) => {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                if (lChar === '8') {
-                    const d = document.createElement('div');
-                    d.className = 'dim'; d.textContent = '8';
-                    cell.appendChild(d);
-                }
-                const sChar = cleanText[i] || " ";
-                if (sChar !== " ") {
-                    const b = document.createElement('div');
-                    b.className = 'bright'; b.textContent = sChar;
-                    cell.appendChild(b);
-                }
-                if (i < 11) r1.appendChild(cell);
-                else r2.appendChild(cell);
-            });
+        async function updateScore() {
+            try {
+                // We use a timestamped query to force a fresh pull from the server
+                const response = await fetch(rawUrl + '?t=' + Date.now());
+                
+                if (!response.ok) throw new Error('Fetch failed');
+                
+                const rawText = await response.text();
+                // Ensure we handle the text even if it has hidden newlines
+                const cleanText = rawText.replace(/[\n\r]/g, '').split('');
+                
+                const r1 = document.getElementById('row1');
+                const r2 = document.getElementById('row2');
+                r1.innerHTML = ''; r2.innerHTML = '';
+                
+                layout.forEach((lChar, i) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (lChar === '8') {
+                        const d = document.createElement('div');
+                        d.className = 'dim'; d.textContent = '8';
+                        cell.appendChild(d);
+                    }
+                    const sChar = cleanText[i] || " ";
+                    if (sChar !== " ") {
+                        const b = document.createElement('div');
+                        b.className = 'bright'; b.textContent = sChar;
+                        cell.appendChild(b);
+                    }
+                    if (i < 11) r1.appendChild(cell);
+                    else r2.appendChild(cell);
+                });
+            } catch (e) {
+                console.log("Waiting for score update...");
+            }
         }
 
-        async function refreshData() {
-            const iframe = document.getElementById('secretFrame');
-            // Force the iframe to reload with a cache-buster URL
-            iframe.src = 'score.txt?t=' + Date.now();
-            
-            iframe.onload = function() {
-                try {
-                    // Grab the text content from inside the hidden iframe
-                    const rawText = iframe.contentDocument.body.innerText || iframe.contentWindow.document.body.innerText;
-                    updateBoard(rawText);
-                } catch (e) {
-                    console.error("Iframe access blocked or failing");
-                }
-            };
-        }
-
-        setInterval(refreshData, 3000);
-        window.onload = refreshData;
+        setInterval(updateScore, 2000);
+        window.onload = updateScore;
     </script>
 </body>
 </html>
