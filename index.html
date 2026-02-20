@@ -54,18 +54,15 @@
             document.getElementById('last-check').textContent = now;
 
             try {
-                // Original simple fetch with a cache-buster added
-                const response = await fetch('score.txt?t=' + Date.now());
-                
-                // Diagnostic: Get the ETag or Last-Modified header from GitHub
-                const etag = response.headers.get('ETag') || response.headers.get('Last-Modified');
-                document.getElementById('etag').textContent = etag;
+                // Fetch from npoint (No cache!)
+                const response = await fetch('https://api.npoint.io/your_unique_id');
+                const data = await response.json();
+                const text = data.score; // Access the "score" key from the JSON
 
-                const text = await response.text();
                 document.getElementById('raw-data').textContent = text;
-                document.getElementById('stat').textContent = "Connected";
+                document.getElementById('stat').textContent = "Connected (npoint)";
 
-                const cleanText = text.replace(/[^0-9 ]/g, '').split('');
+                const cleanText = text.replace(/[^0-9 ]/g, '').split('');    
                 const r1 = document.getElementById('row1');
                 const r2 = document.getElementById('row2');
                 r1.innerHTML = ''; r2.innerHTML = '';
