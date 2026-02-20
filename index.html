@@ -24,7 +24,8 @@
             grid-template-columns: repeat(11, 1fr); 
             grid-template-rows: auto auto auto auto;
             gap: 0.5vh; 
-            width: 95vw;
+            /* Reduced overall width for mobile safety margin */
+            width: 85vw; 
             max-width: 900px;
         }
 
@@ -33,7 +34,6 @@
             text-transform: uppercase;
             font-weight: bold;
             text-align: center;
-            /* Default Large Size for Laptops */
             font-size: 5vh; 
             margin-bottom: 0.8vh;
             white-space: nowrap;
@@ -43,7 +43,6 @@
         .col2 { grid-column: 5 / span 3; }
         .col3 { grid-column: 9 / span 3; }
 
-        /* Nudge for 2-digit centering */
         .nudge { transform: translateX(4.5%); }
 
         .cell {
@@ -64,22 +63,22 @@
         .dim { color: #100000; z-index: 1; }
         .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* --- MOBILE OVERRIDES (30% Smaller) --- */
+        /* --- MOBILE TUNING --- */
         @media (max-width: 767px) {
-            .label {
-                font-size: 3.5vh; /* 30% smaller than 5vh */
+            .scoreboard {
+                width: 85vw; /* This shrinks the whole board by 10% */
             }
-            .small-label {
-                font-size: 2.5vh; /* Proportional reduction for 1st Inns */
+            .label {
+                font-size: 3.2vh; /* Unified size for all labels */
             }
             .nudge {
-                transform: translateX(4%); /* Slight adjustment for smaller text scale */
+                transform: translateX(4%);
             }
         }
 
-        /* --- LAPTOP/TABLET (Original Large Size) --- */
+        /* --- LAPTOP --- */
         @media (min-width: 768px) {
-            .small-label { font-size: 3.5vh; }
+            .scoreboard { width: 90vw; }
         }
     </style>
 </head>
@@ -92,7 +91,7 @@
 
         <div style="grid-column: 1 / -1; height: 3vh;"></div>
 
-        <div class="label col1 small-label">1st Inns</div>
+        <div class="label col1">1st Inns</div>
         <div class="label col2 nudge">Wickets</div>
         <div class="label col3 nudge">Overs</div>
         <div id="row2" style="display: contents;"></div>
