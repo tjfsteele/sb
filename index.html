@@ -18,18 +18,16 @@
             overflow: hidden;
         }
 
-        /* --- THE GRID ENGINE --- */
-        /* --- Update these specific sections in your <style> --- */
-        
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
+            /* Fixed row heights: Row0(digits), Row1(labels), Row2(digits)... */
+            grid-template-rows: auto auto auto auto auto auto auto;
             width: 700px; 
             column-gap: 2px;
-            /* Reduced global gap to bring everything tighter */
-            row-gap: 0.5vh; 
+            row-gap: 0; /* We will use margins for precise control now */
         }
-        
+
         .label {
             grid-column: span 3;
             text-transform: uppercase;
@@ -37,20 +35,27 @@
             text-align: center;
             font-size: 4vh; 
             color: white;
-            /* Standardized margins */
-            margin-top: 2.5vh; 
-            margin-bottom: 0.5vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
-        /* Target the first row of labels specifically to be closer to Row 0 */
+        /* Positioning labels in the grid rows */
         .row-1-labels { 
             grid-row: 2; 
-            margin-top: 0.5vh; /* This brings "BATTER" and "TOTAL" up close to the player numbers */
+            margin-top: -1vh; /* This pulls the labels UP to the player numbers */
+            margin-bottom: 1vh; 
         }
-        
-        /* Keep the spacing for the lower rows so they don't feel crowded */
-        .row-2-labels { grid-row: 4; margin-top: 3vh; }
-        .row-3-labels { grid-row: 6; margin-top: 3vh; }
+        .row-2-labels { 
+            grid-row: 4; 
+            margin-top: 4vh; 
+            margin-bottom: 1vh;
+        }
+        .row-3-labels { 
+            grid-row: 6; 
+            margin-top: 4vh; 
+            margin-bottom: 1vh;
+        }
 
         .col1 { grid-column: 1 / span 3; }
         .col2 { grid-column: 5 / span 3; }
@@ -80,32 +85,34 @@
         .player-no .dim, .player-no .bright { font-size: 5vh; }
 
         @media (max-width: 767px) {
-            .scoreboard { width: 96vw; column-gap: 1px; row-gap: 1vh; }
+            .scoreboard { width: 96vw; column-gap: 1px; }
             .dim, .bright { font-size: 8.5vw; }
             .player-no .dim, .player-no .bright { font-size: 5.5vw; }
-            .label { font-size: 2.5vh; margin-top: 2vh; }
+            .label { font-size: 2.5vh; }
+            .row-1-labels { margin-top: -0.5vh; }
+            .row-2-labels, .row-3-labels { margin-top: 3vh; }
         }
     </style>
 </head>
 <body>
 
     <div class="scoreboard" id="board">
-        <div id="row0" class="player-no" style="display: contents;"></div>
+        <div id="row0" class="player-no" style="grid-row: 1; display: contents;"></div>
 
         <div class="label col1 row-1-labels">Batter</div>
         <div class="label col2 row-1-labels">Total</div>
         <div class="label col3 row-1-labels">Batter</div>
-        <div id="row1" style="display: contents;"></div>
+        <div id="row1" style="grid-row: 3; display: contents;"></div>
 
         <div class="label col1 row-2-labels">1st Inns</div>
         <div class="label col2 nudge row-2-labels">Wickets</div>
         <div class="label col3 nudge row-2-labels">Overs</div>
-        <div id="row2" style="display: contents;"></div>
+        <div id="row2" style="grid-row: 5; display: contents;"></div>
 
         <div class="label col1 row-3-labels">Extras</div>
         <div class="label col2 row-3-labels">Target</div>
         <div class="label col3 row-3-labels">DLS Par</div>
-        <div id="row3" style="display: contents;"></div>
+        <div id="row3" style="grid-row: 7; display: contents;"></div>
     </div>
 
     <script>
