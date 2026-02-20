@@ -108,17 +108,31 @@
     <script>
         const layout = "888 888 888888  88  88".split('');
 
+        // CONFIGURE THESE TWO:
+        const username = 'YOUR_GITHUB_USERNAME';
+        const repo = 'YOUR_REPO_NAME';
+        const filePath = 'score.txt';
+
         async function updateScore() {
             try {
-                // The '?t=' + Date.now() is the "Cache Buster"
-                // It makes the URL score.txt?t=1708422400... so it's always unique
-                const response = await fetch('score.txt?t=' + Date.now(), {
-                    cache: "no-store" // Explicitly tell the browser not to save this
+                // We fetch from the API instead of the raw URL
+                // The 'headers' tell GitHub not to send a cached version
+                const url = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
+                
+                const response = await fetch(url, {
+                    headers: { 'If-Modified-Since': new Date().toUTCString() }
                 });
                 
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) throw new Error('API fetch failed');
                 
-                const rawText = await response.text();
+                const data = await response.json();
+                
+                # 
+
+                // GitHub API returns the file content encoded in Base64
+                // We decode it back to a normal string
+                const rawText = atob(data.content);
+                
                 const cleanText = rawText.replace(/[^0-9 ]/g, '').split('');
                 
                 const r1 = document.getElementById('row1');
@@ -143,12 +157,11 @@
                     else r2.appendChild(cell);
                 });
             } catch (e) {
-                console.error("Fetch failed, retrying...", e);
+                console.error("Update failed:", e);
             }
         }
 
-        // Run every 2 seconds
-        setInterval(updateScore, 2000);
+        setInterval(updateScore, 3000); // 3 seconds is safer for API limits
         window.onload = updateScore;
     </script>
 </body>
