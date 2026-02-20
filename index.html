@@ -19,12 +19,12 @@
             overflow: hidden;
         }
 
-        /* --- BASE STYLES (Laptop First) --- */
+        /* --- SCOREBOARD GRID --- */
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
             grid-template-rows: 9vh auto 9vh auto;
-            width: 700px; /* Fixed width keeps laptop digits tight */
+            width: 700px; /* Fixed width for laptop stability */
             column-gap: 2px;
         }
 
@@ -47,6 +47,7 @@
         .col2 { grid-column: 5 / span 3; }
         .col3 { grid-column: 9 / span 3; }
 
+        /* Fine-tunes label alignment over digits */
         .nudge { transform: translateX(4.5%); }
 
         .cell {
@@ -72,11 +73,11 @@
         @media (max-width: 767px) {
             .scoreboard { 
                 width: 94vw; 
-                column-gap: 1px; /* Minimal gap for mobile snugness */
+                column-gap: 1px; 
                 grid-template-rows: 5vh auto 5vh auto; 
             }
             .dim, .bright { 
-                font-size: 8.5vw; /* Slightly larger to fill the tight gaps */
+                font-size: 8.5vw; 
             }
             .label {
                 font-size: 2.8vh; 
@@ -84,76 +85,90 @@
             }
             .nudge { transform: translateX(1%); }
         }
-
-        /* --- LAPTOP TUNING (Extra safety) --- */
-        @media (min-width: 768px) {
-            .scoreboard { 
-                width: 700px; 
-            }
-        }
     </style>
 </head>
 <body>
+
     <div class="scoreboard" id="board">
         <div class="label col1">Batter</div>
         <div class="label col2">Total</div>
         <div class="label col3">Batter</div>
+        
         <div id="row1" style="display: contents;"></div>
 
-        <div style="grid-column: 1 / -1; height: 2vh;"></div>
+        <div style="grid-column: 1 / -1; height: 3vh;"></div>
 
         <div class="label col1">1st Inns</div>
         <div class="label col2 nudge">Wickets</div>
         <div class="label col3 nudge">Overs</div>
+        
         <div id="row2" style="display: contents;"></div>
     </div>
 
     <script>
+        // "8" tells the script where to draw the background segments
         const layout = "888 888 888888  88  88".split('');
         const NPOINT_ID = "e5ab2c288d26e7ce23ca"; 
 
         async function updateScore() {
             try {
                 const response = await fetch(`https://api.npoint.io/${NPOINT_ID}?t=${Date.now()}`);
-                if (!response.ok) throw new Error('Network fail');
-
-                const rawBody = await response.text();
-                if (!rawBody) return;
-
-                const data = JSON.parse(rawBody);
+                const vals = await response.json(); 
                 
-                if (data && data.score) {
-                    const text = data.score;
-                    const cleanText = text.split('');
+                if (vals && vals.length > 0) {
+                    const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
+
+                    /* MAPPING FROM YOUR 14-LINE ARRAY (0-indexed):
+                       vals[2]  = LeftBatterScore  (Line 3)
+                       vals[4]  = InningsRuns      (Line 5)
+                       vals[3]  = RightBatterScore (Line 4)
+                       vals[10] = FirstInningsScore(Line 11)
+                       vals[5]  = InningsWickets   (Line 6)
+                       vals[6]  = InningsOvers     (Line 7)
+                    */
+
+                    // Top Row: 3 + 1 + 3 + 1 + 3 = 11 chars
+                    const r1Str = pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3);
+                    
+                    // Bottom Row: 3 + 1 + 2 + 3 + 2 = 11 chars (Adjusted for 2-digit Overs)
+                    const r2Str = pad(vals[10], 3) + " " + pad(vals[5], 2) + "   " + pad(vals[6], 2);
+
+                    const fullText = (r1Str + r2Str).split('');
                     const r1 = document.getElementById('row1');
                     const r2 = document.getElementById('row2');
                     
                     r1.innerHTML = ''; 
                     r2.innerHTML = '';
-                    
+
                     layout.forEach((lChar, i) => {
                         const cell = document.createElement('div');
                         cell.className = 'cell';
+                        
+                        // Background "Ghost" 8
                         if (lChar === '8') {
                             const d = document.createElement('div');
                             d.className = 'dim'; d.textContent = '8';
                             cell.appendChild(d);
                         }
-                        const sChar = cleanText[i] || " ";
+                        
+                        // Live Digit
+                        const sChar = fullText[i] || " ";
                         if (sChar !== " ") {
                             const b = document.createElement('div');
                             b.className = 'bright'; b.textContent = sChar;
                             cell.appendChild(b);
                         }
+                        
                         if (i < 11) r1.appendChild(cell);
                         else r2.appendChild(cell);
                     });
                 }
-            } catch (e) {
-                console.log("Syncing..."); // Quiet log instead of crashing
+            } catch (e) { 
+                console.log("Syncing score..."); 
             }
         }
 
+        // Update every 3 seconds
         setInterval(updateScore, 3000);
         window.onload = updateScore;
     </script>
