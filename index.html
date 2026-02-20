@@ -5,69 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf'); }
-        body { background: black; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        body { 
+            background: black; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+        }
         
-        /* The container for the two rows */
-        .scoreboard { font-family: 'DSEG7', monospace; font-size: 12vw; line-height: 1.2; }
-        .row { display: flex; justify-content: center; }
+        /* The Grid: 11 equal columns, 2 rows */
+        .scoreboard { 
+            display: grid;
+            grid-template-columns: repeat(11, 1fr); 
+            grid-template-rows: repeat(2, 1fr);
+            gap: 5px; /* Tiny gap between digits like a real board */
+            font-family: 'DSEG7', monospace;
+            width: 90vw;
+        }
 
-        /* The magic: Every character slot is a fixed-width box */
-        .char-slot { 
-            position: relative; 
-            width: 1ch; /* Exactly one character wide */
-            height: 1.2em;
+        .cell {
+            position: relative;
+            aspect-ratio: 1 / 2; /* Scoreboard digits are usually tall */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dim, .bright {
+            font-size: 12vw;
+            position: absolute;
+            line-height: 1;
             text-align: center;
         }
 
-        /* The dim underlay segments (#800000 as requested) */
-        .dim { color: #800000; position: absolute; top: 0; left: 0; z-index: 1; }
-
-        /* The bright active segments */
-        .bright { color: #f00; position: absolute; top: 0; left: 0; z-index: 2; }
+        .dim { color: #800000; z-index: 1; }
+        .bright { color: #f00; z-index: 2; }
     </style>
 </head>
 <body>
     <div class="scoreboard" id="board"></div>
 
     <script>
-        // The layout template to ensure the dim 8s are always there
-        const layout = ["888 888 888", "888  88  88"];
+        // The skeleton of the board (spaces mean no background '8')
+        const layout = "888 888 888888  88  88".split('');
 
         async function updateScore() {
             try {
                 const response = await fetch('score.txt?t=' + Date.now());
                 const rawText = await response.text();
-                const lines = rawText.split('\n');
+                // Remove the <br> or \n and just get a clean string of chars
+                const cleanText = rawText.replace(/<br>|\n/g, '').split('');
+                
                 const board = document.getElementById('board');
-                board.innerHTML = ''; // Clear current board
+                board.innerHTML = ''; 
 
-                lines.forEach((lineText, rowIndex) => {
-                    const rowDiv = document.createElement('div');
-                    rowDiv.className = 'row';
+                layout.forEach((layoutChar, i) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
                     
-                    // Match the incoming text against our fixed layout of 8s
-                    const targetLayout = layout[rowIndex] || "";
-                    
-                    for (let i = 0; i < targetLayout.length; i++) {
-                        const slot = document.createElement('div');
-                        slot.className = 'char-slot';
-                        
-                        // Always add the dim background '8' if it's not a layout space
-                        if (targetLayout[i] !== " ") {
-                            slot.innerHTML += `<span class="dim">8</span>`;
-                        }
-                        
-                        // Add the bright character from Python if it exists and isn't a space
-                        const char = lineText[i] || " ";
-                        if (char !== " ") {
-                            slot.innerHTML += `<span class="bright">${char}</span>`;
-                        }
-                        
-                        rowDiv.appendChild(slot);
+                    // Add the background "8"
+                    if (layoutChar === '8') {
+                        const dim = document.createElement('div');
+                        dim.className = 'dim';
+                        dim.textContent = '8';
+                        cell.appendChild(dim);
                     }
-                    board.appendChild(rowDiv);
+                    
+                    // Add the actual score digit
+                    const scoreChar = cleanText[i] || " ";
+                    if (scoreChar !== " ") {
+                        const bright = document.createElement('div');
+                        bright.className = 'bright';
+                        bright.textContent = scoreChar;
+                        cell.appendChild(bright);
+                    }
+                    
+                    board.appendChild(cell);
                 });
-            } catch (e) { console.log("Updating..."); }
+            } catch (e) { console.error("Update error"); }
         }
 
         setInterval(updateScore, 2000);
