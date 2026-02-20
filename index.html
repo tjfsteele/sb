@@ -4,33 +4,36 @@
     <title>Live Scoreboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        @font-face { 
-            font-family: 'DSEG7'; 
-            src: url('DSEG7.ttf'); 
-        }
+        @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf'); }
         body { 
             background: black; 
-            color: #f00; 
-            font-family: 'DSEG7', monospace; /* Monospace fallback is key */
             display: flex; 
             justify-content: center; 
             align-items: center; 
             height: 100vh; 
             margin: 0; 
-            overflow: hidden;
+            font-family: 'DSEG7', monospace;
+        }
+        .container { position: relative; display: inline-block; }
+        .base-layer { 
+            color: #200000; /* Very dim red "ghost" segments */
+            font-size: 12vw; 
+            line-height: 1.5; 
+            white-space: pre; 
         }
         #score { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            color: #f00; /* Bright red active segments */
             font-size: 12vw; 
-            text-align: center; 
             line-height: 1.5; 
-            white-space: pre; /* This preserves the spaces exactly as sent */
-            letter-spacing: 2px;
+            white-space: pre; 
         }
     </style>
     <script>
         async function updateScore() {
             try {
-                // Fetch score.txt with a cache-buster
                 const response = await fetch('score.txt?t=' + Date.now());
                 const text = await response.text();
                 document.getElementById('score').textContent = text;
@@ -41,6 +44,9 @@
     </script>
 </head>
 <body>
-    <div id="score">LOADING...</div>
+    <div class="container">
+        <div class="base-layer">888 888 888<br>888  88  88</div>
+        <div id="score"></div>
+    </div>
 </body>
 </html>
