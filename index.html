@@ -22,9 +22,8 @@
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
-            /* min-content prevents the browser from 'squashing' the label height */
-            grid-template-rows: min-content min-content min-content min-content;
-            gap: 0.5vh; 
+            /* Let the browser define row height naturally */
+            grid-template-rows: repeat(4, auto);
             width: 80vw; 
             max-width: 900px;
         }
@@ -35,12 +34,10 @@
             font-weight: bold;
             text-align: center;
             font-size: 5vh; 
-            /* Added padding to ensure bottom of letters (like 's' or 'n') aren't cut */
-            padding-bottom: 1vh; 
+            /* line-height 1.2 ensures space for descenders (bottom of letters) */
+            line-height: 1.2; 
+            margin-bottom: 0.5vh;
             white-space: nowrap;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
         }
         
         .col1 { grid-column: 1 / span 3; }
@@ -69,13 +66,14 @@
 
         /* --- MOBILE TUNING --- */
         @media (max-width: 767px) {
-            .scoreboard { width: 80vw; }
+            .scoreboard { width: 85vw; }
             .label {
                 font-size: 2.8vh; 
-                padding-bottom: 0.5vh; /* Slightly less padding for mobile */
+                line-height: 1.4; /* Extra height for mobile text */
+                margin-top: 1vh;  /* Push it down slightly from the top edge */
             }
             .nudge { transform: translateX(4%); }
-            .dim, .bright { font-size: 9vh; } /* Tiny reduction in digits to free up vertical space */
+            .dim, .bright { font-size: 9vh; }
         }
 
         /* --- LAPTOP --- */
@@ -91,7 +89,7 @@
         <div class="label col3">Batter</div>
         <div id="row1" style="display: contents;"></div>
 
-        <div style="grid-column: 1 / -1; height: 4vh;"></div>
+        <div style="grid-column: 1 / -1; height: 3vh;"></div>
 
         <div class="label col1">1st Inns</div>
         <div class="label col2 nudge">Wickets</div>
@@ -106,11 +104,9 @@
                 const response = await fetch('score.txt?t=' + Date.now());
                 const rawText = await response.text();
                 const cleanText = rawText.replace(/[^0-9 ]/g, '').split('');
-                
                 const r1 = document.getElementById('row1');
                 const r2 = document.getElementById('row2');
                 r1.innerHTML = ''; r2.innerHTML = '';
-
                 layout.forEach((lChar, i) => {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
