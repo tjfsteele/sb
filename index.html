@@ -24,8 +24,8 @@
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
             grid-template-rows: 9vh auto 9vh auto;
-            width: 700px; /* FIXED WIDTH for laptop keeps digits together */
-            column-gap: 2px; /* Tight gap for laptop */
+            width: 700px; /* Fixed width keeps laptop digits tight */
+            column-gap: 2px;
         }
 
         .label {
@@ -37,7 +37,6 @@
             white-space: nowrap;
             display: flex;
             justify-content: center;
-            /* Hang from top to prevent bottom clipping */
             align-items: flex-start; 
             height: 100%;
             padding-top: 1.5vh; 
@@ -49,9 +48,6 @@
         .col3 { grid-column: 9 / span 3; }
 
         .nudge { transform: translateX(4.5%); }
-
-        .dim { color: #100000; z-index: 1; }
-        .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
         .cell {
             position: relative;
@@ -69,15 +65,18 @@
             line-height: 1;
         }
 
+        .dim { color: #100000; z-index: 1; }
+        .bright { color: #f00; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
+
         /* --- MOBILE TUNING --- */
         @media (max-width: 767px) {
             .scoreboard { 
-                width: 94vw; /* Fluid width for mobile */
-                column-gap: 1px; /* The absolute minimum gap to prevent blobs */
+                width: 94vw; 
+                column-gap: 1px; /* Minimal gap for mobile snugness */
                 grid-template-rows: 5vh auto 5vh auto; 
             }
             .dim, .bright { 
-                font-size: 8vw; /* Fills the narrow columns */
+                font-size: 8.5vw; /* Slightly larger to fill the tight gaps */
             }
             .label {
                 font-size: 2.8vh; 
@@ -86,11 +85,10 @@
             .nudge { transform: translateX(1%); }
         }
 
-        /* --- LAPTOP TUNING --- */
+        /* --- LAPTOP TUNING (Extra safety) --- */
         @media (min-width: 768px) {
             .scoreboard { 
-                width: 70vw; /* Narrower overall width keeps digits closer */
-                column-gap: 2px;
+                width: 700px; 
             }
         }
     </style>
@@ -115,8 +113,6 @@
         const NPOINT_ID = "e5ab2c288d26e7ce23ca"; 
 
         async function updateScore() {
-            document.getElementById('last-check').textContent = new Date().toLocaleTimeString();
-
             try {
                 const response = await fetch(`https://api.npoint.io/${NPOINT_ID}?t=${Date.now()}`);
                 if (!response.ok) throw new Error('Network fail');
@@ -128,16 +124,12 @@
                 
                 if (data && data.score) {
                     const text = data.score;
-                    document.getElementById('raw-data').textContent = text;
-                    document.getElementById('stat').textContent = "Live";
-
-                    // The logic expects a string, so we ensure no hidden junk breaks it
                     const cleanText = text.split('');
                     const r1 = document.getElementById('row1');
                     const r2 = document.getElementById('row2');
                     
-                    // Clear and Rebuild
-                    r1.innerHTML = ''; r2.innerHTML = '';
+                    r1.innerHTML = ''; 
+                    r2.innerHTML = '';
                     
                     layout.forEach((lChar, i) => {
                         const cell = document.createElement('div');
@@ -158,8 +150,7 @@
                     });
                 }
             } catch (e) {
-                document.getElementById('stat').textContent = "Syncing...";
-                console.error(e);
+                console.log("Syncing..."); // Quiet log instead of crashing
             }
         }
 
