@@ -81,13 +81,11 @@
         /* --- MOBILE TUNING --- */
         @media (max-width: 767px) {
             .scoreboard { 
-                width: 98vw; 
-                /* Add actual gaps between the columns */
-                column-gap: 4px; 
+                width: 92vw; /* Pulled in slightly from the edges */
+                column-gap: 1.5px; /* Tightened gap for a cohesive look */
                 grid-template-rows: 5vh auto 5vh auto; 
             }
             .cell {
-                /* Remove the laptop max-width for mobile */
                 max-width: none; 
             }
             .label {
@@ -95,8 +93,8 @@
                 padding-top: 0.5vh; 
             }
             .dim, .bright { 
-                /* Shrink font slightly more to force horizontal space */
-                font-size: 6.5vw; 
+                /* Bumping size back up to 7.2vw to fill the tighter columns */
+                font-size: 7.2vw; 
             }
             .nudge { transform: translateX(1%); }
         }
