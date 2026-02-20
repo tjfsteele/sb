@@ -22,21 +22,25 @@
         .scoreboard { 
             display: grid;
             grid-template-columns: repeat(11, 1fr); 
-            grid-template-rows: auto auto auto auto;
+            /* min-content prevents the browser from 'squashing' the label height */
+            grid-template-rows: min-content min-content min-content min-content;
             gap: 0.5vh; 
-            width: 85vw; 
+            width: 80vw; 
             max-width: 900px;
         }
 
-        /* Unified Label Style for Laptop */
         .label {
             grid-column: span 3;
             text-transform: uppercase;
             font-weight: bold;
             text-align: center;
-            font-size: 5vh; /* Standard large size for laptop */
-            margin-bottom: 0.8vh;
+            font-size: 5vh; 
+            /* Added padding to ensure bottom of letters (like 's' or 'n') aren't cut */
+            padding-bottom: 1vh; 
             white-space: nowrap;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
         }
         
         .col1 { grid-column: 1 / span 3; }
@@ -65,15 +69,13 @@
 
         /* --- MOBILE TUNING --- */
         @media (max-width: 767px) {
-            .scoreboard {
-                width: 80vw; /* Further reduction of overall footprint */
-            }
+            .scoreboard { width: 80vw; }
             .label {
-                font-size: 2.0vh; 
+                font-size: 2.8vh; 
+                padding-bottom: 0.5vh; /* Slightly less padding for mobile */
             }
-            .nudge {
-                transform: translateX(4%);
-            }
+            .nudge { transform: translateX(4%); }
+            .dim, .bright { font-size: 9vh; } /* Tiny reduction in digits to free up vertical space */
         }
 
         /* --- LAPTOP --- */
@@ -89,7 +91,7 @@
         <div class="label col3">Batter</div>
         <div id="row1" style="display: contents;"></div>
 
-        <div style="grid-column: 1 / -1; height: 3vh;"></div>
+        <div style="grid-column: 1 / -1; height: 4vh;"></div>
 
         <div class="label col1">1st Inns</div>
         <div class="label col2 nudge">Wickets</div>
@@ -103,7 +105,6 @@
             try {
                 const response = await fetch('score.txt?t=' + Date.now());
                 const rawText = await response.text();
-                // Clean the text to ensure the grid logic is 1:1 with layout
                 const cleanText = rawText.replace(/[^0-9 ]/g, '').split('');
                 
                 const r1 = document.getElementById('row1');
