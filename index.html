@@ -108,31 +108,29 @@
     <script>
         const layout = "888 888 888888  88  88".split('');
 
-        // CONFIGURE THESE TWO:
-        const username = 'YOUR_GITHUB_USERNAME';
-        const repo = 'YOUR_REPO_NAME';
-        const filePath = 'score.txt';
+        // CHANGE THESE to your actual details
+        const user = "YOUR_USERNAME";
+        const repo = "YOUR_REPO";
+        const branch = "main"; // or "master"
 
         async function updateScore() {
             try {
-                // We fetch from the API instead of the raw URL
-                // The 'headers' tell GitHub not to send a cached version
-                const url = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
+                // We point to RAW content, not the Pages URL
+                // We add a random 'cache buster' to the end
+                const url = `https://raw.githubusercontent.com/${user}/${repo}/${branch}/score.txt?v=${Date.now()}`;
                 
                 const response = await fetch(url, {
-                    headers: { 'If-Modified-Since': new Date().toUTCString() }
+                    cache: "no-cache",
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
                 });
-                
-                if (!response.ok) throw new Error('API fetch failed');
-                
-                const data = await response.json();
-                
-                # 
 
-                // GitHub API returns the file content encoded in Base64
-                // We decode it back to a normal string
-                const rawText = atob(data.content);
-                
+                if (!response.ok) return;
+
+                const rawText = await response.text();
+                // We only want digits and spaces
                 const cleanText = rawText.replace(/[^0-9 ]/g, '').split('');
                 
                 const r1 = document.getElementById('row1');
@@ -157,11 +155,11 @@
                     else r2.appendChild(cell);
                 });
             } catch (e) {
-                console.error("Update failed:", e);
+                console.error("Update failed");
             }
         }
 
-        setInterval(updateScore, 3000); // 3 seconds is safer for API limits
+        setInterval(updateScore, 2000);
         window.onload = updateScore;
     </script>
 </body>
