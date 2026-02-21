@@ -8,7 +8,19 @@
         body { background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; }
         
         .row-container { width: 700px; margin-bottom: 2vh; display: flex; flex-direction: column; }
+        
+        /* Standard grid for rows 1, 2, and 3 */
         .digit-row { display: grid; grid-template-columns: repeat(11, 1fr); column-gap: 2px; }
+        
+        /* CUSTOM GRID FOR TOP ROW: 
+           Narrows the spacers (cols 3 & 9) and the colon (col 6) 
+           to bring digits closer together */
+        .top-row-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 0.3fr 1fr 1fr 0.4fr 1fr 1fr 0.3fr 1fr 1fr; 
+            column-gap: 2px; 
+        }
+
         .label-row { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 2px; }
 
         .label { 
@@ -21,9 +33,7 @@
             transition: color 0.4s ease;
         }
         
-        /* Dark grey state for labels without data */
         .label.inactive { color: #222; }
-
         .player-snug { margin-bottom: -1vh; } 
         .top-labels { margin-top: -1vh; margin-bottom: 0.5vh; }
 
@@ -32,20 +42,13 @@
         .dim { color: #200400; z-index: 1; }
         .bright { color: #ff5500; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        #row0 .dim, #row0 .bright { font-size: 5vh; }
+        /* Top row digits at 2/3 size */
+        #row0 .dim, #row0 .bright { font-size: 5.33vh; }
 
         #fs-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #666;
-            border: 1px solid #444;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 12px;
-            border-radius: 4px;
-            z-index: 100;
+            position: fixed; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.1);
+            color: #666; border: 1px solid #444; padding: 8px 12px; cursor: pointer;
+            font-size: 12px; border-radius: 4px; z-index: 100;
         }
         #fs-btn:hover { background: rgba(255, 255, 255, 0.2); color: white; }
         :fullscreen #fs-btn { opacity: 0; }
@@ -53,7 +56,6 @@
         @media (max-width: 767px) {
             .row-container { width: 96vw; margin-bottom: 1vh; }
             .dim, .bright { font-size: 8.5vw; }
-            /* Mobile adjustment for top row (2/3 of 8.5vw = ~5.67vw) */
             #row0 .dim, #row0 .bright { font-size: 5.67vw; }
             .label { font-size: 2.8vh; }
             .top-labels { margin-top: -0.5vh; }
@@ -65,7 +67,7 @@
     <button id="fs-btn" onclick="toggleFullscreen()">FULLSCREEN</button>
 
     <div class="row-container">
-        <div id="row0" class="digit-row player-snug"></div>
+        <div id="row0" class="top-row-grid player-snug"></div>
         <div class="label-row top-labels">
             <div id="lbl-b1" class="label">Batter</div>
             <div id="lbl-total" class="label">Total</div>
@@ -137,11 +139,9 @@
                     const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
                     
                     const t = getSystemTime();
-                    // Using 2 digits for batter IDs to keep the top row balanced
                     const b1 = (vals[0] || "").toString().padStart(2, " ").slice(-2);
                     const b2 = (vals[1] || "").toString().padStart(2, " ").slice(-2);
                     
-                    // Row 0 layout: [B1] [Space] [HH] [:] [MM] [Space] [B2] (11 slots)
                     const row0Chars = [b1[0], b1[1], " ", t[0], t[1], ":", t[2], t[3], " ", b2[0], b2[1]];
 
                     const rowsData = [
@@ -159,16 +159,13 @@
                         chars.forEach((char, cIdx) => {
                             const cell = document.createElement('div');
                             cell.className = 'cell';
-                            
                             let needsDim = (char !== " ");
-
                             if (needsDim) {
                                 const d = document.createElement('div');
                                 d.className = 'dim'; 
                                 d.textContent = (char === ":") ? ":" : "8";
                                 cell.appendChild(d);
                             }
-
                             if (char !== " " && char !== "") {
                                 const b = document.createElement('div');
                                 b.className = 'bright'; 
