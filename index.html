@@ -23,6 +23,26 @@
 
         .player-no .dim, .player-no .bright { font-size: 5vh; }
 
+        /* Fullscreen Button Styles */
+        #fs-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #666;
+            border: 1px solid #444;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+        #fs-btn:hover { background: rgba(255, 255, 255, 0.2); color: white; }
+        
+        /* Hide button when actually in fullscreen for a cleaner look */
+        :fullscreen #fs-btn { opacity: 0; }
+
         @media (max-width: 767px) {
             .row-container { width: 96vw; margin-bottom: 1vh; }
             .dim, .bright { font-size: 8.5vw; }
@@ -33,6 +53,8 @@
     </style>
 </head>
 <body>
+
+    <button id="fs-btn" onclick="toggleFullscreen()">FULLSCREEN</button>
 
     <div class="row-container">
         <div id="row0" class="digit-row player-no player-snug"></div>
@@ -64,6 +86,17 @@
 
     <script>
         const NPOINT_ID = "e5ab2c288d26e7ce23ca"; 
+
+        // --- Fullscreen Logic ---
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
 
         async function updateScore() {
             try {
