@@ -31,8 +31,10 @@
         .dim { color: #110200; z-index: 1; }
         .bright { color: #ff5500; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* Specific sizing for the small Batter Numbers in Row 0 */
-        .small-digit .dim, .small-digit .bright { font-size: 5vh; }
+        /* Style for the clock specifically when inside a row */
+        .clock-cell .bright { color: #ff5500; }
+        
+        .player-no .dim, .player-no .bright { font-size: 5vh; }
 
         #fs-btn {
             position: fixed;
@@ -53,7 +55,7 @@
         @media (max-width: 767px) {
             .row-container { width: 96vw; margin-bottom: 1vh; }
             .dim, .bright { font-size: 8.5vw; }
-            .small-digit .dim, .small-digit .bright { font-size: 5.5vw; }
+            .player-no .dim, .player-no .bright { font-size: 5.5vw; }
             .label { font-size: 2.8vh; }
             .top-labels { margin-top: -0.5vh; }
         }
@@ -64,7 +66,7 @@
     <button id="fs-btn" onclick="toggleFullscreen()">FULLSCREEN</button>
 
     <div class="row-container">
-        <div id="row0" class="digit-row player-snug"></div>
+        <div id="row0" class="digit-row player-no player-snug"></div>
         <div class="label-row top-labels">
             <div id="lbl-b1" class="label">Batter</div>
             <div id="lbl-total" class="label">Total</div>
@@ -136,6 +138,8 @@
                     const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
                     const clockStr = getSystemTime();
 
+                    // Row 0 Mapping: [B1 (3 chars)] [Space (1)] [Clock (5 chars)] [Space (1)] [B2 (3 chars)]
+                    // This totals 11 characters to fit your grid.
                     const rowsData = [
                         pad(vals[0], 3) + " " + clockStr + " " + pad(vals[1], 3),        
                         pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3), 
@@ -152,12 +156,14 @@
                             const cell = document.createElement('div');
                             cell.className = 'cell';
                             
-                            // APPLY SMALLER SIZE TO BATTER NUMBERS (Indices 0,1,2 and 8,9,10 in Row 0)
-                            if (rIdx === 0 && (cIdx < 3 || cIdx > 7)) {
-                                cell.classList.add('small-digit');
-                            }
-
-                            const isSpacer = (rIdx === 0) ? (cIdx === 3 || cIdx === 7) : (cIdx === 3 || cIdx === 7);
+                            // Define background "ghost" digits
+                            // For Row 0: Slots 4, 5, 7, 8 are clock numbers. Slot 6 is the colon.
+                            let dimChar = '8';
+                            if (rIdx === 0 && cIdx === 5) dimChar = ':'; // Ghost colon
+                            
+                            // Don't show ghost digits on spacer columns (index 3 and 7 in standard rows)
+                            // In Row 0, index 3 and 9 are the spaces around the clock.
+                            const isSpacer = (rIdx === 0) ? (cIdx === 3 || cIdx === 9) : (cIdx === 3 || cIdx === 7);
 
                             if (!isSpacer) {
                                 const d = document.createElement('div');
