@@ -8,31 +8,28 @@
         body { background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; }
         
         .row-container { width: 700px; margin-bottom: 2vh; display: flex; flex-direction: column; }
-        
-        /* Standard grid for rows 1, 2, and 3 */
         .digit-row { display: grid; grid-template-columns: repeat(11, 1fr); column-gap: 2px; }
         
-        /* CUSTOM GRID FOR TOP ROW: 
-           Narrows the spacers (cols 3 & 9) and the colon (col 6) 
-           to bring digits closer together */
+        /* NEW TOP ROW: 5 logical sections instead of 11 */
         .top-row-grid { 
             display: grid; 
-            grid-template-columns: 1fr 1fr 0.3fr 1fr 1fr 0.4fr 1fr 1fr 0.3fr 1fr 1fr; 
-            column-gap: 2px; 
+            grid-template-columns: 2fr 1fr 3fr 1fr 2fr; 
+            align-items: center;
         }
+
+        .clock-group { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            gap: 0; /* No gap between clock digits */
+        }
+
+        /* Pull the clock digits closer together */
+        .clock-digit-wrap { width: 3.5vh; display: flex; justify-content: center; }
+        .clock-colon-wrap { width: 1.5vh; display: flex; justify-content: center; }
 
         .label-row { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 2px; }
-
-        .label { 
-            text-transform: uppercase; 
-            font-weight: bold; 
-            text-align: center; 
-            font-size: 4.5vh; 
-            color: white; 
-            padding: 0.5vh 0; 
-            transition: color 0.4s ease;
-        }
-        
+        .label { text-transform: uppercase; font-weight: bold; text-align: center; font-size: 4.5vh; color: white; padding: 0.5vh 0; transition: color 0.4s ease; }
         .label.inactive { color: #222; }
         .player-snug { margin-bottom: -1vh; } 
         .top-labels { margin-top: -1vh; margin-bottom: 0.5vh; }
@@ -45,25 +42,19 @@
         /* Top row digits at 2/3 size */
         #row0 .dim, #row0 .bright { font-size: 5.33vh; }
 
-        #fs-btn {
-            position: fixed; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.1);
-            color: #666; border: 1px solid #444; padding: 8px 12px; cursor: pointer;
-            font-size: 12px; border-radius: 4px; z-index: 100;
-        }
-        #fs-btn:hover { background: rgba(255, 255, 255, 0.2); color: white; }
+        #fs-btn { position: fixed; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.1); color: #666; border: 1px solid #444; padding: 8px 12px; cursor: pointer; font-size: 12px; border-radius: 4px; z-index: 100; }
         :fullscreen #fs-btn { opacity: 0; }
 
         @media (max-width: 767px) {
-            .row-container { width: 96vw; margin-bottom: 1vh; }
+            .row-container { width: 96vw; }
             .dim, .bright { font-size: 8.5vw; }
             #row0 .dim, #row0 .bright { font-size: 5.67vw; }
-            .label { font-size: 2.8vh; }
-            .top-labels { margin-top: -0.5vh; }
+            .clock-digit-wrap { width: 4vw; }
+            .clock-colon-wrap { width: 2vw; }
         }
     </style>
 </head>
 <body>
-
     <button id="fs-btn" onclick="toggleFullscreen()">FULLSCREEN</button>
 
     <div class="row-container">
@@ -98,87 +89,91 @@
         const NPOINT_ID = "e5ab2c288d26e7ce23ca"; 
 
         function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
         }
 
-        function getSystemTime() {
-            const now = new Date();
-            const hh = now.getHours().toString().padStart(2, '0');
-            const mm = now.getMinutes().toString().padStart(2, '0');
-            return hh + mm;
+        function createDigit(char, isColon = false) {
+            const cell = document.createElement('div');
+            cell.className = isColon ? 'clock-colon-wrap cell' : 'clock-digit-wrap cell';
+            const d = document.createElement('div');
+            d.className = 'dim'; d.textContent = isColon ? ':' : '8';
+            cell.appendChild(d);
+            if (char !== " ") {
+                const b = document.createElement('div');
+                b.className = 'bright'; b.textContent = char;
+                cell.appendChild(b);
+            }
+            return cell;
         }
 
         async function updateScore() {
             try {
                 const response = await fetch(`https://api.npoint.io/${NPOINT_ID}?t=${Date.now()}`);
                 const vals = await response.json(); 
-                
-                if (vals && vals.length > 0) {
-                    const checkLabel = (id, val) => {
-                        const el = document.getElementById(id);
-                        if (el) {
-                            const hasData = val !== null && val !== undefined && val.toString().trim() !== "";
-                            el.classList.toggle('inactive', !hasData);
+                if (!vals || vals.length === 0) return;
+
+                const check = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.toggle('inactive', !(val !== null && val !== undefined && val.toString().trim() !== ""));
+                };
+                ['lbl-b1','lbl-b2','lbl-total','lbl-inns','lbl-wickets','lbl-overs','lbl-dls','lbl-win','lbl-rem'].forEach((id, i) => {
+                    const map = [0,1,4,10,5,6,13,11,12];
+                    check(id, vals[map[i]]);
+                });
+
+                // ROW 0 CUSTOM RENDER
+                const r0 = document.getElementById('row0');
+                r0.innerHTML = '';
+                const now = new Date();
+                const hh = now.getHours().toString().padStart(2,'0');
+                const mm = now.getMinutes().toString().padStart(2,'0');
+                const b1_val = (vals[0] || "").toString().padStart(2," ").slice(-2);
+                const b2_val = (vals[1] || "").toString().padStart(2," ").slice(-2);
+
+                const b1_box = document.createElement('div'); b1_box.className = 'digit-row';
+                b1_box.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                b1_box.appendChild(createDigit(b1_val[0])); b1_box.appendChild(createDigit(b1_val[1]));
+
+                const clk_box = document.createElement('div'); clk_box.className = 'clock-group';
+                clk_box.appendChild(createDigit(hh[0])); clk_box.appendChild(createDigit(hh[1]));
+                clk_box.appendChild(createDigit(':', true));
+                clk_box.appendChild(createDigit(mm[0])); clk_box.appendChild(createDigit(mm[1]));
+
+                const b2_box = document.createElement('div'); b2_box.className = 'digit-row';
+                b2_box.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                b2_box.appendChild(createDigit(b2_val[0])); b2_box.appendChild(createDigit(b2_val[1]));
+
+                r0.appendChild(b1_box); r0.appendChild(document.createElement('div')); // Spacer
+                r0.appendChild(clk_box); r0.appendChild(document.createElement('div')); // Spacer
+                r0.appendChild(b2_box);
+
+                // ROWS 1-3 STANDARD RENDER
+                const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
+                const rowsData = [
+                    (pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3)).split(''), 
+                    (pad(vals[10], 3) + "  " + pad(vals[5], 2) + "  " + pad(vals[6], 2)).split(''), 
+                    (pad(vals[13], 3) + " " + pad(vals[11], 3) + "  " + pad(vals[12], 2)).split('')
+                ];
+
+                ['row1', 'row2', 'row3'].forEach((id, rIdx) => {
+                    const container = document.getElementById(id);
+                    container.innerHTML = '';
+                    rowsData[rIdx].forEach((char, cIdx) => {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        if (char !== " ") {
+                            const d = document.createElement('div'); d.className = 'dim'; d.textContent = (char === ":") ? ":" : "8";
+                            const b = document.createElement('div'); b.className = 'bright'; b.textContent = char;
+                            cell.appendChild(d); cell.appendChild(b);
+                        } else if (!( (rIdx===1 && (cIdx===3||cIdx===4||cIdx===7||cIdx===8)) || (rIdx===2 && (cIdx===3||cIdx===7||cIdx===8)) || (rIdx===0 && (cIdx===3||cIdx===7)) )) {
+                             const d = document.createElement('div'); d.className = 'dim'; d.textContent = '8'; cell.appendChild(d);
                         }
-                    };
-
-                    checkLabel('lbl-b1', vals[0]);
-                    checkLabel('lbl-b2', vals[1]);
-                    checkLabel('lbl-total', vals[4]);
-                    checkLabel('lbl-inns', vals[10]);
-                    checkLabel('lbl-wickets', vals[5]);
-                    checkLabel('lbl-overs', vals[6]);
-                    checkLabel('lbl-dls', vals[13]);
-                    checkLabel('lbl-win', vals[11]);
-                    checkLabel('lbl-rem', vals[12]);
-
-                    const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
-                    
-                    const t = getSystemTime();
-                    const b1 = (vals[0] || "").toString().padStart(2, " ").slice(-2);
-                    const b2 = (vals[1] || "").toString().padStart(2, " ").slice(-2);
-                    
-                    const row0Chars = [b1[0], b1[1], " ", t[0], t[1], ":", t[2], t[3], " ", b2[0], b2[1]];
-
-                    const rowsData = [
-                        row0Chars, 
-                        (pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3)).split(''), 
-                        (pad(vals[10], 3) + "  " + pad(vals[5], 2) + "  " + pad(vals[6], 2)).split(''), 
-                        (pad(vals[13], 3) + " " + pad(vals[11], 3) + "  " + pad(vals[12], 2)).split('')
-                    ];
-
-                    ['row0', 'row1', 'row2', 'row3'].forEach((id, rIdx) => {
-                        const container = document.getElementById(id);
-                        container.innerHTML = '';
-                        const chars = rowsData[rIdx];
-                        
-                        chars.forEach((char, cIdx) => {
-                            const cell = document.createElement('div');
-                            cell.className = 'cell';
-                            let needsDim = (char !== " ");
-                            if (needsDim) {
-                                const d = document.createElement('div');
-                                d.className = 'dim'; 
-                                d.textContent = (char === ":") ? ":" : "8";
-                                cell.appendChild(d);
-                            }
-                            if (char !== " " && char !== "") {
-                                const b = document.createElement('div');
-                                b.className = 'bright'; 
-                                b.textContent = char;
-                                cell.appendChild(b);
-                            }
-                            container.appendChild(cell);
-                        });
+                        container.appendChild(cell);
                     });
-                }
-            } catch (e) { console.log("Sync..."); }
+                });
+            } catch (e) { console.log(e); }
         }
-
         setInterval(updateScore, 3000);
         window.onload = updateScore;
     </script>
