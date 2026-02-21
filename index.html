@@ -77,9 +77,9 @@
 
     <div class="row-container">
         <div class="label-row">
-            <div class="label">Extras</div>
-            <div class="label">Target</div>
             <div class="label">DLS Par</div>
+            <div class="label">Overs Rem</div>
+            <div class="label">Runs Rem</div>
         </div>
         <div id="row3" class="digit-row"></div>
     </div>
@@ -110,7 +110,7 @@
                         pad(vals[0], 3) + "     " + pad(vals[1], 3),        
                         pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3), 
                         pad(vals[10], 3) + "  " + pad(vals[5], 2) + "  " + pad(vals[6], 2), 
-                        pad(vals[7], 3) + " " + pad(vals[11], 3) + " " + pad(vals[13], 3)  
+                        pad(vals[13], 3) + "  " + pad(vals[12], 2) + " " + pad(vals[11], 3)  
                     ];
 
                     ['row0', 'row1', 'row2', 'row3'].forEach((id, rIdx) => {
