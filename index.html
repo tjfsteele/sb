@@ -7,11 +7,6 @@
         @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf'); }
         body { background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; }
         
-        /* Clock Styles */
-        .clock-container { display: flex; justify-content: center; margin-bottom: 1vh; height: 5vh; align-items: center; }
-        .clock-digit { font-family: 'DSEG7', monospace; font-size: 4vh; color: #ff5500; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
-        .clock-dim { color: #110200; position: absolute; z-index: -1; }
-
         .row-container { width: 700px; margin-bottom: 2vh; display: flex; flex-direction: column; }
         .digit-row { display: grid; grid-template-columns: repeat(11, 1fr); column-gap: 2px; }
         .label-row { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 2px; }
@@ -36,6 +31,9 @@
         .dim { color: #110200; z-index: 1; }
         .bright { color: #ff5500; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
+        /* Style for the clock specifically when inside a row */
+        .clock-cell .bright { color: #ff5500; }
+        
         .player-no .dim, .player-no .bright { font-size: 5vh; }
 
         #fs-btn {
@@ -60,20 +58,12 @@
             .player-no .dim, .player-no .bright { font-size: 5.5vw; }
             .label { font-size: 2.8vh; }
             .top-labels { margin-top: -0.5vh; }
-            .clock-digit { font-size: 5vw; }
         }
     </style>
 </head>
 <body>
 
     <button id="fs-btn" onclick="toggleFullscreen()">FULLSCREEN</button>
-
-    <div class="clock-container">
-        <div style="position: relative;">
-            <span class="clock-digit clock-dim">88:88</span>
-            <span id="clock" class="clock-digit">00:00</span>
-        </div>
-    </div>
 
     <div class="row-container">
         <div id="row0" class="digit-row player-no player-snug"></div>
@@ -114,16 +104,14 @@
             }
         }
 
-        // Logic for the System Clock
-        function updateClock() {
+        function getSystemTime() {
             const now = new Date();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            document.getElementById('clock').textContent = `${hours}:${minutes}`;
+            const hh = now.getHours().toString().padStart(2, '0');
+            const mm = now.getMinutes().toString().padStart(2, '0');
+            return `${hh}:${mm}`;
         }
 
         async function updateScore() {
-            updateClock(); // Refresh clock every time data refreshes
             try {
                 const response = await fetch(`https://api.npoint.io/${NPOINT_ID}?t=${Date.now()}`);
                 const vals = await response.json(); 
@@ -148,9 +136,12 @@
                     checkLabel('lbl-rem', vals[12]);
 
                     const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
+                    const clockStr = getSystemTime();
 
+                    // Row 0 Mapping: [B1 (3 chars)] [Space (1)] [Clock (5 chars)] [Space (1)] [B2 (3 chars)]
+                    // This totals 11 characters to fit your grid.
                     const rowsData = [
-                        pad(vals[0], 3) + "     " + pad(vals[1], 3),        
+                        pad(vals[0], 3) + " " + clockStr + " " + pad(vals[1], 3),        
                         pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3), 
                         pad(vals[10], 3) + "  " + pad(vals[5], 2) + "  " + pad(vals[6], 2), 
                         pad(vals[13], 3) + " " + pad(vals[11], 3) + "  " + pad(vals[12], 2)  
@@ -164,14 +155,27 @@
                         chars.forEach((char, cIdx) => {
                             const cell = document.createElement('div');
                             cell.className = 'cell';
-                            if (cIdx !== 3 && cIdx !== 7) {
+                            
+                            // Define background "ghost" digits
+                            // For Row 0: Slots 4, 5, 7, 8 are clock numbers. Slot 6 is the colon.
+                            let dimChar = '8';
+                            if (rIdx === 0 && cIdx === 5) dimChar = ':'; // Ghost colon
+                            
+                            // Don't show ghost digits on spacer columns (index 3 and 7 in standard rows)
+                            // In Row 0, index 3 and 9 are the spaces around the clock.
+                            const isSpacer = (rIdx === 0) ? (cIdx === 3 || cIdx === 9) : (cIdx === 3 || cIdx === 7);
+
+                            if (!isSpacer) {
                                 const d = document.createElement('div');
-                                d.className = 'dim'; d.textContent = '8';
+                                d.className = 'dim'; 
+                                d.textContent = (char === ":" || (rIdx === 0 && cIdx === 5)) ? ":" : "8";
                                 cell.appendChild(d);
                             }
+
                             if (char !== " ") {
                                 const b = document.createElement('div');
-                                b.className = 'bright'; b.textContent = char;
+                                b.className = 'bright'; 
+                                b.textContent = char;
                                 cell.appendChild(b);
                             }
                             container.appendChild(cell);
@@ -181,8 +185,6 @@
             } catch (e) { console.log("Sync..."); }
         }
 
-        // Run clock update more frequently than data update for accuracy
-        setInterval(updateClock, 1000); 
         setInterval(updateScore, 3000);
         window.onload = updateScore;
     </script>
