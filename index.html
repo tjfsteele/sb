@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scoreboard</title>
+    <title>Live Scoreboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf'); }
@@ -10,23 +10,28 @@
         .row-container { width: 700px; margin-bottom: 2vh; display: flex; flex-direction: column; }
         .digit-row { display: grid; grid-template-columns: repeat(11, 1fr); column-gap: 2px; }
         
-        /* Revised Top Row: Using Flex for tighter digit grouping */
         .top-row-grid { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             width: 100%; 
-            /* Increased space below the digits before the labels start */
-            margin-bottom: 1.5vh; 
+            margin-bottom: 2.5vh; 
         }
 
         .batter-id-group, .clock-group { display: flex; align-items: center; gap: 0; }
         
-        /* Individual digit containers for top row (2/3 size) */
         .top-digit-wrap { width: 3.8vh; display: flex; justify-content: center; position: relative; aspect-ratio: 1/1.5; }
-        .clock-colon-wrap { width: 1.8vh; display: flex; justify-content: center; position: relative; aspect-ratio: 1/1.5; }
+        
+        /* Centering the colon halfway up the digits */
+        .clock-colon-wrap { 
+            width: 1.8vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            position: relative; 
+            aspect-ratio: 1/1.5; 
+        }
 
-        /* Blink Animation for the Colon */
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.1; }
@@ -37,7 +42,6 @@
         .label { text-transform: uppercase; font-weight: bold; text-align: center; font-size: 4.5vh; color: white; padding: 0.5vh 0; transition: color 0.4s ease; }
         .label.inactive { color: #222; }
         
-        /* Adjusted label spacing */
         .top-labels { margin-top: 0; margin-bottom: 2vh; }
 
         .cell { position: relative; width: 100%; aspect-ratio: 1 / 1.5; display: flex; justify-content: center; align-items: center; }
@@ -45,8 +49,10 @@
         .dim { color: #180300; z-index: 1; }
         .bright { color: #ff5500; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* Top row digits at 2/3 size */
-        #row0 .dim, #row0 .bright { font-size: 5.33vh; }
+        #row0 .dim, #row0 .bright { font-size: 5.33vh; line-height: 1; }
+        
+        /* Fine-tune colon vertical position */
+        .clock-colon-wrap .bright, .clock-colon-wrap .dim { transform: translateY(-5%); }
 
         #fs-btn { position: fixed; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.1); color: #666; border: 1px solid #444; padding: 8px 12px; cursor: pointer; font-size: 12px; border-radius: 4px; z-index: 100; }
         :fullscreen #fs-btn { opacity: 0; }
@@ -55,10 +61,11 @@
             .row-container { width: 96vw; }
             .dim, .bright { font-size: 8.5vw; }
             #row0 .dim, #row0 .bright { font-size: 6vw; }
-            .label { font-size: 3vw; } 
+            /* Increased mobile label size */
+            .label { font-size: 4vw; } 
             .top-digit-wrap { width: 4.5vw; }
             .clock-colon-wrap { width: 2.5vw; }
-            .top-row-grid { margin-bottom: 1vh; }
+            .top-row-grid { margin-bottom: 1.5vh; }
         }
     </style>
 </head>
@@ -104,10 +111,12 @@
         function createTopDigit(char, isColon = false) {
             const wrap = document.createElement('div');
             wrap.className = isColon ? 'clock-colon-wrap' : 'top-digit-wrap';
+            
             const d = document.createElement('div');
             d.className = 'dim'; 
             d.textContent = isColon ? ':' : '8';
             wrap.appendChild(d);
+
             if (char !== " " && char !== "") {
                 const b = document.createElement('div');
                 b.className = isColon ? 'bright blinking' : 'bright'; 
@@ -123,7 +132,6 @@
                 const vals = await response.json(); 
                 if (!vals || vals.length === 0) return;
 
-                // Label Update
                 const check = (id, val) => {
                     const el = document.getElementById(id);
                     if (el) el.classList.toggle('inactive', !(val !== null && val !== undefined && val.toString().trim() !== ""));
@@ -132,7 +140,6 @@
                 const dataIndices = [0,1,4,10,5,6,13,11,12];
                 labelMap.forEach((id, i) => check(id, vals[dataIndices[i]]));
 
-                // Row 0 Custom Rendering
                 const r0 = document.getElementById('row0');
                 r0.innerHTML = '';
                 const now = new Date();
@@ -154,7 +161,6 @@
 
                 r0.appendChild(b1_grp); r0.appendChild(clk_grp); r0.appendChild(b2_grp);
 
-                // Main Score Rows
                 const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
                 const rowsData = [
                     (pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3)).split(''), 
@@ -173,7 +179,6 @@
                             const b = document.createElement('div'); b.className = 'bright'; b.textContent = char;
                             cell.appendChild(d); cell.appendChild(b);
                         } else {
-                            // Gap logic
                             const isGap = (rIdx===1 && (cIdx===3||cIdx===4||cIdx===7||cIdx===8)) || (rIdx===2 && (cIdx===3||cIdx===7||cIdx===8));
                             if (!isGap) {
                                 const d = document.createElement('div'); d.className = 'dim'; d.textContent = '8'; cell.appendChild(d);
