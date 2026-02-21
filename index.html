@@ -22,7 +22,6 @@
         
         .top-digit-wrap { width: 3.8vh; display: flex; justify-content: center; position: relative; aspect-ratio: 1/1.5; }
         
-        /* Centering the colon halfway up the digits */
         .clock-colon-wrap { 
             width: 1.8vh; 
             display: flex; 
@@ -31,12 +30,6 @@
             position: relative; 
             aspect-ratio: 1/1.5; 
         }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.1; }
-        }
-        .blinking { animation: blink 1s step-start infinite; }
 
         .label-row { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 2px; }
         .label { text-transform: uppercase; font-weight: bold; text-align: center; font-size: 4.5vh; color: white; padding: 0.5vh 0; transition: color 0.4s ease; }
@@ -61,8 +54,8 @@
             .row-container { width: 96vw; }
             .dim, .bright { font-size: 8.5vw; }
             #row0 .dim, #row0 .bright { font-size: 6vw; }
-            /* Increased mobile label size */
-            .label { font-size: 4vw; } 
+            /* Mobile labels bumped up for clarity */
+            .label { font-size: 5.2vw; } 
             .top-digit-wrap { width: 4.5vw; }
             .clock-colon-wrap { width: 2.5vw; }
             .top-row-grid { margin-bottom: 1.5vh; }
@@ -119,7 +112,7 @@
 
             if (char !== " " && char !== "") {
                 const b = document.createElement('div');
-                b.className = isColon ? 'bright blinking' : 'bright'; 
+                b.className = 'bright';
                 b.textContent = char;
                 wrap.appendChild(b);
             }
