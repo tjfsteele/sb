@@ -31,10 +31,8 @@
         .dim { color: #110200; z-index: 1; }
         .bright { color: #ff5500; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* Style for the clock specifically when inside a row */
-        .clock-cell .bright { color: #ff5500; }
-        
-        .player-no .dim, .player-no .bright { font-size: 5vh; }
+        /* Ensuring Row 0 digits are consistent with the rest of the board */
+        #row0 .dim, #row0 .bright { font-size: 6.5vh; } 
 
         #fs-btn {
             position: fixed;
@@ -55,7 +53,7 @@
         @media (max-width: 767px) {
             .row-container { width: 96vw; margin-bottom: 1vh; }
             .dim, .bright { font-size: 8.5vw; }
-            .player-no .dim, .player-no .bright { font-size: 5.5vw; }
+            #row0 .dim, #row0 .bright { font-size: 7vw; }
             .label { font-size: 2.8vh; }
             .top-labels { margin-top: -0.5vh; }
         }
@@ -66,7 +64,7 @@
     <button id="fs-btn" onclick="toggleFullscreen()">FULLSCREEN</button>
 
     <div class="row-container">
-        <div id="row0" class="digit-row player-no player-snug"></div>
+        <div id="row0" class="digit-row player-snug"></div>
         <div class="label-row top-labels">
             <div id="lbl-b1" class="label">Batter</div>
             <div id="lbl-total" class="label">Total</div>
@@ -138,10 +136,13 @@
                     const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
                     const clockStr = getSystemTime();
 
-                    // Row 0 Mapping: [B1 (3 chars)] [Space (1)] [Clock (5 chars)] [Space (1)] [B2 (3 chars)]
-                    // This totals 11 characters to fit your grid.
+                    // row0 structure: [B1: 2 digits] [Space] [Clock: 5 chars] [Space] [B2: 2 digits]
+                    // We use 2 digits for batter numbers to prevent overcrowding the clock
+                    const b1 = (vals[0] || "").toString().padStart(2, " ").slice(-2);
+                    const b2 = (vals[1] || "").toString().padStart(2, " ").slice(-2);
+                    
                     const rowsData = [
-                        pad(vals[0], 3) + " " + clockStr + " " + pad(vals[1], 3),        
+                        b1 + "  " + clockStr + "  " + b2,        
                         pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3), 
                         pad(vals[10], 3) + "  " + pad(vals[5], 2) + "  " + pad(vals[6], 2), 
                         pad(vals[13], 3) + " " + pad(vals[11], 3) + "  " + pad(vals[12], 2)  
@@ -156,23 +157,18 @@
                             const cell = document.createElement('div');
                             cell.className = 'cell';
                             
-                            // Define background "ghost" digits
-                            // For Row 0: Slots 4, 5, 7, 8 are clock numbers. Slot 6 is the colon.
-                            let dimChar = '8';
-                            if (rIdx === 0 && cIdx === 5) dimChar = ':'; // Ghost colon
-                            
-                            // Don't show ghost digits on spacer columns (index 3 and 7 in standard rows)
-                            // In Row 0, index 3 and 9 are the spaces around the clock.
-                            const isSpacer = (rIdx === 0) ? (cIdx === 3 || cIdx === 9) : (cIdx === 3 || cIdx === 7);
+                            // Define if this cell should have a background '8' or ':' 
+                            let needsDim = true;
+                            if (char === " ") needsDim = false;
 
-                            if (!isSpacer) {
+                            if (needsDim) {
                                 const d = document.createElement('div');
                                 d.className = 'dim'; 
-                                d.textContent = (char === ":" || (rIdx === 0 && cIdx === 5)) ? ":" : "8";
+                                d.textContent = (char === ":") ? ":" : "8";
                                 cell.appendChild(d);
                             }
 
-                            if (char !== " ") {
+                            if (char !== " " && char !== "") {
                                 const b = document.createElement('div');
                                 b.className = 'bright'; 
                                 b.textContent = char;
