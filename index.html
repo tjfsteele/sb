@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Live Scoreboard</title>
+    <title>Scoreboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf'); }
@@ -11,19 +11,29 @@
         .digit-row { display: grid; grid-template-columns: repeat(11, 1fr); column-gap: 2px; }
         .label-row { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 2px; }
 
-        .label { text-transform: uppercase; font-weight: bold; text-align: center; font-size: 4.5vh; color: white; padding: 0.5vh 0; }
+        .label { 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            text-align: center; 
+            font-size: 4.5vh; 
+            color: white; 
+            padding: 0.5vh 0; 
+            transition: color 0.4s ease; /* Smooth transition when value appears */
+        }
         
+        /* Dark grey state for labels without data */
+        .label.inactive { color: #222; }
+
         .player-snug { margin-bottom: -1vh; } 
         .top-labels { margin-top: -1vh; margin-bottom: 0.5vh; }
 
         .cell { position: relative; width: 100%; aspect-ratio: 1 / 1.5; display: flex; justify-content: center; align-items: center; }
         .dim, .bright { font-size: 8vh; position: absolute; font-family: 'DSEG7', monospace; line-height: 1; }
-        .dim { color: #200400; z-index: 1; }
+        .dim { color: #110200; z-index: 1; }
         .bright { color: #ff5500; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
         .player-no .dim, .player-no .bright { font-size: 5vh; }
 
-        /* Fullscreen Button Styles */
         #fs-btn {
             position: fixed;
             bottom: 20px;
@@ -36,11 +46,8 @@
             font-size: 12px;
             border-radius: 4px;
             z-index: 100;
-            transition: all 0.3s;
         }
         #fs-btn:hover { background: rgba(255, 255, 255, 0.2); color: white; }
-        
-        /* Hide button when actually in fullscreen for a cleaner look */
         :fullscreen #fs-btn { opacity: 0; }
 
         @media (max-width: 767px) {
@@ -59,27 +66,27 @@
     <div class="row-container">
         <div id="row0" class="digit-row player-no player-snug"></div>
         <div class="label-row top-labels">
-            <div class="label">Batter</div>
-            <div class="label">Total</div>
-            <div class="label">Batter</div>
+            <div id="lbl-b1" class="label">Batter</div>
+            <div id="lbl-total" class="label">Total</div>
+            <div id="lbl-b2" class="label">Batter</div>
         </div>
         <div id="row1" class="digit-row"></div>
     </div>
 
     <div class="row-container">
         <div class="label-row">
-            <div class="label">1st Inns</div>
-            <div class="label">Wickets</div>
-            <div class="label">Overs</div>
+            <div id="lbl-inns" class="label">1st Inns</div>
+            <div id="lbl-wickets" class="label">Wickets</div>
+            <div id="lbl-overs" class="label">Overs</div>
         </div>
         <div id="row2" class="digit-row"></div>
     </div>
 
     <div class="row-container">
         <div class="label-row">
-            <div class="label">DLS Par</div>
-            <div class="label">To Win</div>
-            <div class="label">Overs Rem</div>
+            <div id="lbl-dls" class="label">DLS Par</div>
+            <div id="lbl-win" class="label">To Win</div>
+            <div id="lbl-rem" class="label">Overs Rem</div>
         </div>
         <div id="row3" class="digit-row"></div>
     </div>
@@ -87,12 +94,9 @@
     <script>
         const NPOINT_ID = "e5ab2c288d26e7ce23ca"; 
 
-        // --- Fullscreen Logic ---
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-                });
+                document.documentElement.requestFullscreen();
             } else {
                 document.exitFullscreen();
             }
@@ -104,6 +108,28 @@
                 const vals = await response.json(); 
                 
                 if (vals && vals.length > 0) {
+                    
+                    // Logic to dim labels based on data presence
+                    const checkLabel = (id, val) => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            // Deactivate if value is null, undefined, or empty string
+                            const hasData = val !== null && val !== undefined && val.toString().trim() !== "";
+                            el.classList.toggle('inactive', !hasData);
+                        }
+                    };
+
+                    // Map labels to data indices
+                    checkLabel('lbl-b1', vals[0]);
+                    checkLabel('lbl-b2', vals[1]);
+                    checkLabel('lbl-total', vals[4]);
+                    checkLabel('lbl-inns', vals[10]);
+                    checkLabel('lbl-wickets', vals[5]);
+                    checkLabel('lbl-overs', vals[6]);
+                    checkLabel('lbl-dls', vals[13]);
+                    checkLabel('lbl-win', vals[11]);
+                    checkLabel('lbl-rem', vals[12]);
+
                     const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
 
                     const rowsData = [
