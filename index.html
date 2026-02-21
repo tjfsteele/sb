@@ -10,33 +10,30 @@
         .row-container { width: 700px; margin-bottom: 2vh; display: flex; flex-direction: column; }
         .digit-row { display: grid; grid-template-columns: repeat(11, 1fr); column-gap: 2px; }
         
-        /* NEW TOP ROW: 5 logical sections instead of 11 */
-        .top-row-grid { 
-            display: grid; 
-            grid-template-columns: 2fr 1fr 3fr 1fr 2fr; 
-            align-items: center;
-        }
+        /* Top Row Layout */
+        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .batter-id-group, .clock-group { display: flex; align-items: center; gap: 0; }
+        
+        .top-digit-wrap { width: 3.8vh; display: flex; justify-content: center; position: relative; aspect-ratio: 1/1.5; }
+        .clock-colon-wrap { width: 1.8vh; display: flex; justify-content: center; position: relative; aspect-ratio: 1/1.5; }
 
-        .clock-group { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            gap: 0; /* No gap between clock digits */
+        /* Blink Animation */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.1; }
         }
-
-        /* Pull the clock digits closer together */
-        .clock-digit-wrap { width: 3.5vh; display: flex; justify-content: center; }
-        .clock-colon-wrap { width: 1.5vh; display: flex; justify-content: center; }
+        .blinking { animation: blink 1s step-start infinite; }
 
         .label-row { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 2px; }
         .label { text-transform: uppercase; font-weight: bold; text-align: center; font-size: 4.5vh; color: white; padding: 0.5vh 0; transition: color 0.4s ease; }
         .label.inactive { color: #222; }
+        
         .player-snug { margin-bottom: -1vh; } 
         .top-labels { margin-top: -1vh; margin-bottom: 0.5vh; }
 
         .cell { position: relative; width: 100%; aspect-ratio: 1 / 1.5; display: flex; justify-content: center; align-items: center; }
         .dim, .bright { font-size: 8vh; position: absolute; font-family: 'DSEG7', monospace; line-height: 1; }
-        .dim { color: #800400; z-index: 1; }
+        .dim { color: #780300; z-index: 1; }
         .bright { color: #ff5500; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
         /* Top row digits at 2/3 size */
@@ -48,9 +45,10 @@
         @media (max-width: 767px) {
             .row-container { width: 96vw; }
             .dim, .bright { font-size: 8.5vw; }
-            #row0 .dim, #row0 .bright { font-size: 5.67vw; }
-            .clock-digit-wrap { width: 4vw; }
-            .clock-colon-wrap { width: 2vw; }
+            #row0 .dim, #row0 .bright { font-size: 6vw; }
+            .label { font-size: 3vw; } 
+            .top-digit-wrap { width: 4.5vw; }
+            .clock-colon-wrap { width: 2.5vw; }
         }
     </style>
 </head>
@@ -93,18 +91,22 @@
             else document.exitFullscreen();
         }
 
-        function createDigit(char, isColon = false) {
-            const cell = document.createElement('div');
-            cell.className = isColon ? 'clock-colon-wrap cell' : 'clock-digit-wrap cell';
+        function createTopDigit(char, isColon = false) {
+            const wrap = document.createElement('div');
+            wrap.className = isColon ? 'clock-colon-wrap' : 'top-digit-wrap';
+            
             const d = document.createElement('div');
-            d.className = 'dim'; d.textContent = isColon ? ':' : '8';
-            cell.appendChild(d);
-            if (char !== " ") {
+            d.className = 'dim'; 
+            d.textContent = isColon ? ':' : '8';
+            wrap.appendChild(d);
+
+            if (char !== " " && char !== "") {
                 const b = document.createElement('div');
-                b.className = 'bright'; b.textContent = char;
-                cell.appendChild(b);
+                b.className = isColon ? 'bright blinking' : 'bright'; 
+                b.textContent = char;
+                wrap.appendChild(b);
             }
-            return cell;
+            return wrap;
         }
 
         async function updateScore() {
@@ -117,12 +119,10 @@
                     const el = document.getElementById(id);
                     if (el) el.classList.toggle('inactive', !(val !== null && val !== undefined && val.toString().trim() !== ""));
                 };
-                ['lbl-b1','lbl-b2','lbl-total','lbl-inns','lbl-wickets','lbl-overs','lbl-dls','lbl-win','lbl-rem'].forEach((id, i) => {
-                    const map = [0,1,4,10,5,6,13,11,12];
-                    check(id, vals[map[i]]);
-                });
+                const labelMap = ['lbl-b1','lbl-b2','lbl-total','lbl-inns','lbl-wickets','lbl-overs','lbl-dls','lbl-win','lbl-rem'];
+                const dataIndices = [0,1,4,10,5,6,13,11,12];
+                labelMap.forEach((id, i) => check(id, vals[dataIndices[i]]));
 
-                // ROW 0 CUSTOM RENDER
                 const r0 = document.getElementById('row0');
                 r0.innerHTML = '';
                 const now = new Date();
@@ -131,24 +131,19 @@
                 const b1_val = (vals[0] || "").toString().padStart(2," ").slice(-2);
                 const b2_val = (vals[1] || "").toString().padStart(2," ").slice(-2);
 
-                const b1_box = document.createElement('div'); b1_box.className = 'digit-row';
-                b1_box.style.gridTemplateColumns = 'repeat(2, 1fr)';
-                b1_box.appendChild(createDigit(b1_val[0])); b1_box.appendChild(createDigit(b1_val[1]));
+                const b1_grp = document.createElement('div'); b1_grp.className = 'batter-id-group';
+                b1_grp.appendChild(createTopDigit(b1_val[0])); b1_grp.appendChild(createTopDigit(b1_val[1]));
 
-                const clk_box = document.createElement('div'); clk_box.className = 'clock-group';
-                clk_box.appendChild(createDigit(hh[0])); clk_box.appendChild(createDigit(hh[1]));
-                clk_box.appendChild(createDigit(':', true));
-                clk_box.appendChild(createDigit(mm[0])); clk_box.appendChild(createDigit(mm[1]));
+                const clk_grp = document.createElement('div'); clk_grp.className = 'clock-group';
+                clk_grp.appendChild(createTopDigit(hh[0])); clk_grp.appendChild(createTopDigit(hh[1]));
+                clk_grp.appendChild(createTopDigit(':', true));
+                clk_grp.appendChild(createTopDigit(mm[0])); clk_grp.appendChild(createTopDigit(mm[1]));
 
-                const b2_box = document.createElement('div'); b2_box.className = 'digit-row';
-                b2_box.style.gridTemplateColumns = 'repeat(2, 1fr)';
-                b2_box.appendChild(createDigit(b2_val[0])); b2_box.appendChild(createDigit(b2_val[1]));
+                const b2_grp = document.createElement('div'); b2_grp.className = 'batter-id-group';
+                b2_grp.appendChild(createTopDigit(b2_val[0])); b2_grp.appendChild(createTopDigit(b2_val[1]));
 
-                r0.appendChild(b1_box); r0.appendChild(document.createElement('div')); // Spacer
-                r0.appendChild(clk_box); r0.appendChild(document.createElement('div')); // Spacer
-                r0.appendChild(b2_box);
+                r0.appendChild(b1_grp); r0.appendChild(clk_grp); r0.appendChild(b2_grp);
 
-                // ROWS 1-3 STANDARD RENDER
                 const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
                 const rowsData = [
                     (pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3)).split(''), 
@@ -166,8 +161,11 @@
                             const d = document.createElement('div'); d.className = 'dim'; d.textContent = (char === ":") ? ":" : "8";
                             const b = document.createElement('div'); b.className = 'bright'; b.textContent = char;
                             cell.appendChild(d); cell.appendChild(b);
-                        } else if (!( (rIdx===1 && (cIdx===3||cIdx===4||cIdx===7||cIdx===8)) || (rIdx===2 && (cIdx===3||cIdx===7||cIdx===8)) || (rIdx===0 && (cIdx===3||cIdx===7)) )) {
-                             const d = document.createElement('div'); d.className = 'dim'; d.textContent = '8'; cell.appendChild(d);
+                        } else {
+                            const isGap = (rIdx===0 && (cIdx===3||cIdx===7)) || (rIdx===1 && (cIdx===3||cIdx===4||cIdx===7||cIdx===8)) || (rIdx===2 && (cIdx===3||cIdx===7||cIdx===8));
+                            if (!isGap) {
+                                const d = document.createElement('div'); d.className = 'dim'; d.textContent = '8'; cell.appendChild(d);
+                            }
                         }
                         container.appendChild(cell);
                     });
