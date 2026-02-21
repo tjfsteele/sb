@@ -32,8 +32,7 @@
         .dim { color: #200400; z-index: 1; }
         .bright { color: #ff5500; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* Ensuring Row 0 digits are consistent with standard size */
-        #row0 .dim, #row0 .bright { font-size: 8vh; }
+        #row0 .dim, #row0 .bright { font-size: 5vh; }
 
         #fs-btn {
             position: fixed;
@@ -54,6 +53,8 @@
         @media (max-width: 767px) {
             .row-container { width: 96vw; margin-bottom: 1vh; }
             .dim, .bright { font-size: 8.5vw; }
+            /* Mobile adjustment for top row (2/3 of 8.5vw = ~5.67vw) */
+            #row0 .dim, #row0 .bright { font-size: 5.67vw; }
             .label { font-size: 2.8vh; }
             .top-labels { margin-top: -0.5vh; }
         }
@@ -106,7 +107,6 @@
             const now = new Date();
             const hh = now.getHours().toString().padStart(2, '0');
             const mm = now.getMinutes().toString().padStart(2, '0');
-            // Returns HHMM without colon for easier grid mapping
             return hh + mm;
         }
 
@@ -136,22 +136,16 @@
 
                     const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
                     
-                    // Time processing
-                    const t = getSystemTime(); // e.g., "1804"
-                    const b1 = pad(vals[0], 3); // 3 digits
-                    const b2 = pad(vals[1], 3); // 3 digits
-
-                    // Grid Structure Row 0 (11 slots total):
-                    // [B1: 3] [Space: 1] [HH: 2] [Colon: 1] [MM: 2] [Space: 1] [B2: 1] (Wait, we need to balance)
-                    // Let's use: [B1: 2] [Space: 1] [HH: 2] [Colon: 1] [MM: 2] [Space: 1] [B2: 2] = 11 slots
-                    const b1_2 = (vals[0] || "").toString().padStart(2, " ").slice(-2);
-                    const b2_2 = (vals[1] || "").toString().padStart(2, " ").slice(-2);
+                    const t = getSystemTime();
+                    // Using 2 digits for batter IDs to keep the top row balanced
+                    const b1 = (vals[0] || "").toString().padStart(2, " ").slice(-2);
+                    const b2 = (vals[1] || "").toString().padStart(2, " ").slice(-2);
                     
-                    // Row 0 map: B1(0,1) | Space(2) | H(3) | H(4) | :(5) | M(6) | M(7) | Space(8) | B2(9,10)
-                    const row0Chars = [b1_2[0], b1_2[1], " ", t[0], t[1], ":", t[2], t[3], " ", b2_2[0], b2_2[1]];
+                    // Row 0 layout: [B1] [Space] [HH] [:] [MM] [Space] [B2] (11 slots)
+                    const row0Chars = [b1[0], b1[1], " ", t[0], t[1], ":", t[2], t[3], " ", b2[0], b2[1]];
 
                     const rowsData = [
-                        row0Chars, // Array of 11 chars
+                        row0Chars, 
                         (pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3)).split(''), 
                         (pad(vals[10], 3) + "  " + pad(vals[5], 2) + "  " + pad(vals[6], 2)).split(''), 
                         (pad(vals[13], 3) + " " + pad(vals[11], 3) + "  " + pad(vals[12], 2)).split('')
@@ -166,9 +160,7 @@
                             const cell = document.createElement('div');
                             cell.className = 'cell';
                             
-                            // Determine if we need a dim background
-                            let needsDim = true;
-                            if (char === " ") needsDim = false;
+                            let needsDim = (char !== " ");
 
                             if (needsDim) {
                                 const d = document.createElement('div');
