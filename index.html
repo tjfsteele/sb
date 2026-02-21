@@ -21,6 +21,7 @@
             transition: color 0.4s ease;
         }
         
+        /* Dark grey state for labels without data */
         .label.inactive { color: #222; }
 
         .player-snug { margin-bottom: -1vh; } 
@@ -28,11 +29,11 @@
 
         .cell { position: relative; width: 100%; aspect-ratio: 1 / 1.5; display: flex; justify-content: center; align-items: center; }
         .dim, .bright { font-size: 8vh; position: absolute; font-family: 'DSEG7', monospace; line-height: 1; }
-        .dim { color: #110200; z-index: 1; }
+        .dim { color: #200400; z-index: 1; }
         .bright { color: #ff5500; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
 
-        /* Ensuring Row 0 digits are consistent with the rest of the board */
-        #row0 .dim, #row0 .bright { font-size: 6.5vh; } 
+        /* Ensuring Row 0 digits are consistent with standard size */
+        #row0 .dim, #row0 .bright { font-size: 8vh; }
 
         #fs-btn {
             position: fixed;
@@ -53,7 +54,6 @@
         @media (max-width: 767px) {
             .row-container { width: 96vw; margin-bottom: 1vh; }
             .dim, .bright { font-size: 8.5vw; }
-            #row0 .dim, #row0 .bright { font-size: 7vw; }
             .label { font-size: 2.8vh; }
             .top-labels { margin-top: -0.5vh; }
         }
@@ -106,7 +106,8 @@
             const now = new Date();
             const hh = now.getHours().toString().padStart(2, '0');
             const mm = now.getMinutes().toString().padStart(2, '0');
-            return `${hh}:${mm}`;
+            // Returns HHMM without colon for easier grid mapping
+            return hh + mm;
         }
 
         async function updateScore() {
@@ -134,30 +135,38 @@
                     checkLabel('lbl-rem', vals[12]);
 
                     const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
-                    const clockStr = getSystemTime();
-
-                    // row0 structure: [B1: 2 digits] [Space] [Clock: 5 chars] [Space] [B2: 2 digits]
-                    // We use 2 digits for batter numbers to prevent overcrowding the clock
-                    const b1 = (vals[0] || "").toString().padStart(2, " ").slice(-2);
-                    const b2 = (vals[1] || "").toString().padStart(2, " ").slice(-2);
                     
+                    // Time processing
+                    const t = getSystemTime(); // e.g., "1804"
+                    const b1 = pad(vals[0], 3); // 3 digits
+                    const b2 = pad(vals[1], 3); // 3 digits
+
+                    // Grid Structure Row 0 (11 slots total):
+                    // [B1: 3] [Space: 1] [HH: 2] [Colon: 1] [MM: 2] [Space: 1] [B2: 1] (Wait, we need to balance)
+                    // Let's use: [B1: 2] [Space: 1] [HH: 2] [Colon: 1] [MM: 2] [Space: 1] [B2: 2] = 11 slots
+                    const b1_2 = (vals[0] || "").toString().padStart(2, " ").slice(-2);
+                    const b2_2 = (vals[1] || "").toString().padStart(2, " ").slice(-2);
+                    
+                    // Row 0 map: B1(0,1) | Space(2) | H(3) | H(4) | :(5) | M(6) | M(7) | Space(8) | B2(9,10)
+                    const row0Chars = [b1_2[0], b1_2[1], " ", t[0], t[1], ":", t[2], t[3], " ", b2_2[0], b2_2[1]];
+
                     const rowsData = [
-                        b1 + "  " + clockStr + "  " + b2,        
-                        pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3), 
-                        pad(vals[10], 3) + "  " + pad(vals[5], 2) + "  " + pad(vals[6], 2), 
-                        pad(vals[13], 3) + " " + pad(vals[11], 3) + "  " + pad(vals[12], 2)  
+                        row0Chars, // Array of 11 chars
+                        (pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3)).split(''), 
+                        (pad(vals[10], 3) + "  " + pad(vals[5], 2) + "  " + pad(vals[6], 2)).split(''), 
+                        (pad(vals[13], 3) + " " + pad(vals[11], 3) + "  " + pad(vals[12], 2)).split('')
                     ];
 
                     ['row0', 'row1', 'row2', 'row3'].forEach((id, rIdx) => {
                         const container = document.getElementById(id);
                         container.innerHTML = '';
-                        const chars = rowsData[rIdx].split('');
+                        const chars = rowsData[rIdx];
                         
                         chars.forEach((char, cIdx) => {
                             const cell = document.createElement('div');
                             cell.className = 'cell';
                             
-                            // Define if this cell should have a background '8' or ':' 
+                            // Determine if we need a dim background
                             let needsDim = true;
                             if (char === " ") needsDim = false;
 
