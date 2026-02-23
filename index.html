@@ -162,24 +162,56 @@
                 ];
 
                 ['row1', 'row2', 'row3'].forEach((id, rIdx) => {
-                    const container = document.getElementById(id);
-                    container.innerHTML = '';
-                    rowsData[rIdx].forEach((char, cIdx) => {
-                        const cell = document.createElement('div');
-                        cell.className = 'cell';
-                        if (char !== " ") {
-                            const d = document.createElement('div'); d.className = 'dim'; d.textContent = (char === ":") ? ":" : "8";
-                            const b = document.createElement('div'); b.className = 'bright'; b.textContent = char;
-                            cell.appendChild(d); cell.appendChild(b);
-                        } else {
-                            const isGap = (rIdx===1 && (cIdx===3||cIdx===4||cIdx===7||cIdx===8)) || (rIdx===2 && (cIdx===3||cIdx===7||cIdx===8));
-                            if (!isGap) {
-                                const d = document.createElement('div'); d.className = 'dim'; d.textContent = '8'; cell.appendChild(d);
-                            }
-                        }
-                        container.appendChild(cell);
-                    });
-                });
+    const container = document.getElementById(id);
+    container.innerHTML = '';
+    rowsData[rIdx].forEach((char, cIdx) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        
+        // If there is a number/character, show the dim '8' and the bright char
+        if (char !== " " && char !== "") {
+            const d = document.createElement('div'); d.className = 'dim'; d.textContent = "8";
+            const b = document.createElement('div'); b.className = 'bright'; b.textContent = char;
+            cell.appendChild(d);
+            cell.appendChild(b);
+        } else {
+            // Only draw a dim '8' if it's NOT a gap position (indices 3 and 7)
+            // This creates the 888 [gap] 888 [gap] 888 layout
+            if (cIdx !== 3 && cIdx !== 7) {
+                const d = document.createElement('div'); 
+                d.className = 'dim'; 
+                d.textContent = '8'; 
+                cell.appendChild(d);
+            }
+        }
+        container.appendChild(cell);
+    });
+    ['row1', 'row2', 'row3'].forEach((id, rIdx) => {
+        const container = document.getElementById(id);
+        container.innerHTML = '';
+        rowsData[rIdx].forEach((char, cIdx) => {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            
+            // If there is a number/character, show the dim '8' and the bright char
+            if (char !== " " && char !== "") {
+                const d = document.createElement('div'); d.className = 'dim'; d.textContent = "8";
+                const b = document.createElement('div'); b.className = 'bright'; b.textContent = char;
+                cell.appendChild(d);
+                cell.appendChild(b);
+            } else {
+                // Only draw a dim '8' if it's NOT a gap position (indices 3 and 7)
+                // This creates the 888 [gap] 888 [gap] 888 layout
+                if (cIdx !== 3 && cIdx !== 7) {
+                    const d = document.createElement('div'); 
+                    d.className = 'dim'; 
+                    d.textContent = '8'; 
+                    cell.appendChild(d);
+                }
+            }
+            container.appendChild(cell);
+        });
+    });
             } catch (e) { console.log(e); }
         }
         setInterval(updateScore, 3000);
