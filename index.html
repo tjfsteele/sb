@@ -44,7 +44,6 @@
 
         #row0 .dim, #row0 .bright { font-size: 5.33vh; line-height: 1; }
         
-        /* Fine-tune colon vertical position */
         .clock-colon-wrap .bright, .clock-colon-wrap .dim { transform: translateY(-5%); }
 
         #fs-btn { position: fixed; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.1); color: #666; border: 1px solid #444; padding: 8px 12px; cursor: pointer; font-size: 12px; border-radius: 4px; z-index: 100; }
@@ -54,7 +53,6 @@
             .row-container { width: 96vw; }
             .dim, .bright { font-size: 8.5vw; }
             #row0 .dim, #row0 .bright { font-size: 6vw; }
-            /* Mobile labels bumped up for clarity */
             .label { font-size: 5.2vw; } 
             .top-digit-wrap { width: 4.5vw; }
             .clock-colon-wrap { width: 2.5vw; }
@@ -155,63 +153,39 @@
                 r0.appendChild(b1_grp); r0.appendChild(clk_grp); r0.appendChild(b2_grp);
 
                 const pad = (v, l) => (v || "").toString().padStart(l, " ").slice(-l);
+                
+                // Construct 11-character strings for each row (3 digits, space, 3 digits, space, 3 digits)
                 const rowsData = [
                     (pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3)).split(''), 
-                    (pad(vals[10], 3) + "  " + pad(vals[5], 2) + "  " + pad(vals[6], 2)).split(''), 
-                    (pad(vals[13], 3) + " " + pad(vals[11], 3) + "  " + pad(vals[12], 2)).split('')
+                    (pad(vals[10], 3) + " " + pad(vals[5], 3) + " " + pad(vals[6], 3)).split(''), 
+                    (pad(vals[13], 3) + " " + pad(vals[11], 3) + " " + pad(vals[12], 3)).split('')
                 ];
 
                 ['row1', 'row2', 'row3'].forEach((id, rIdx) => {
-    const container = document.getElementById(id);
-    container.innerHTML = '';
-    rowsData[rIdx].forEach((char, cIdx) => {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        
-        // If there is a number/character, show the dim '8' and the bright char
-        if (char !== " " && char !== "") {
-            const d = document.createElement('div'); d.className = 'dim'; d.textContent = "8";
-            const b = document.createElement('div'); b.className = 'bright'; b.textContent = char;
-            cell.appendChild(d);
-            cell.appendChild(b);
-        } else {
-            // Only draw a dim '8' if it's NOT a gap position (indices 3 and 7)
-            // This creates the 888 [gap] 888 [gap] 888 layout
-            if (cIdx !== 3 && cIdx !== 7) {
-                const d = document.createElement('div'); 
-                d.className = 'dim'; 
-                d.textContent = '8'; 
-                cell.appendChild(d);
-            }
-        }
-        container.appendChild(cell);
-    });
-    ['row1', 'row2', 'row3'].forEach((id, rIdx) => {
-        const container = document.getElementById(id);
-        container.innerHTML = '';
-        rowsData[rIdx].forEach((char, cIdx) => {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            
-            // If there is a number/character, show the dim '8' and the bright char
-            if (char !== " " && char !== "") {
-                const d = document.createElement('div'); d.className = 'dim'; d.textContent = "8";
-                const b = document.createElement('div'); b.className = 'bright'; b.textContent = char;
-                cell.appendChild(d);
-                cell.appendChild(b);
-            } else {
-                // Only draw a dim '8' if it's NOT a gap position (indices 3 and 7)
-                // This creates the 888 [gap] 888 [gap] 888 layout
-                if (cIdx !== 3 && cIdx !== 7) {
-                    const d = document.createElement('div'); 
-                    d.className = 'dim'; 
-                    d.textContent = '8'; 
-                    cell.appendChild(d);
-                }
-            }
-            container.appendChild(cell);
-        });
-    });
+                    const container = document.getElementById(id);
+                    container.innerHTML = '';
+                    rowsData[rIdx].forEach((char, cIdx) => {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        
+                        // Check if this index is a 'gap' position (index 3 and 7)
+                        const isGap = (cIdx === 3 || cIdx === 7);
+
+                        if (char !== " " && char !== "") {
+                            // If there's a character, show the dim '8' background + bright digit
+                            const d = document.createElement('div'); d.className = 'dim'; d.textContent = "8";
+                            const b = document.createElement('div'); b.className = 'bright'; b.textContent = char;
+                            cell.appendChild(d);
+                            cell.appendChild(b);
+                        } else if (!isGap) {
+                            // If it's an empty character but NOT a gap, show only the dim '8'
+                            const d = document.createElement('div'); d.className = 'dim'; d.textContent = '8'; 
+                            cell.appendChild(d);
+                        }
+                        // If it's a gap, we append the empty cell (effectively a blank space)
+                        container.appendChild(cell);
+                    });
+                });
             } catch (e) { console.log(e); }
         }
         setInterval(updateScore, 3000);
