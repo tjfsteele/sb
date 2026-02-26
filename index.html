@@ -50,21 +50,18 @@
     <script>
         const NPOINT_ID = "e5ab2c288d26e7ce23ca"; 
 
-        // Structure: [Display Name, Data Index]
+        // Structure: [Display Name, Data Index for Large Number]
         const ROWS = [
-            [["Batter", 0], ["Total", 4],   ["Batter", 1]],
+            [["Batter", 2],   ["Total", 4],   ["Batter", 3]],     // Scores for B1, Total, B2
             [["1st Inns", 10], ["Wickets", 5], ["Overs", 6]],
-            [["Extras", 7], ["Last Man", 8], ["Last Wkt", 9]],
-            [["DLS Par", 13], ["To Win", 11], ["Overs Rem", 12]]
+            [["DLS Par", 13], ["To Win", 11], ["Overs Rem", 12]],
+            [["Extras", 7],    ["Last Man", 8], ["Last Wkt", 9]]
         ];
 
-        // Initialize the HTML Structure
+        // Init HTML
         const board = document.getElementById('board');
-        
-        // Add Row 0 (Clock/Batter IDs)
         board.innerHTML = `<div class="row-container"><div id="row0" class="top-row-grid"></div></div>`;
 
-        // Add Main Rows 1-4
         ROWS.forEach((rowConfigs, rowIndex) => {
             const rowNum = rowIndex + 1;
             const container = document.createElement('div');
@@ -82,7 +79,7 @@
             const wrap = document.createElement('div');
             wrap.className = isTopRow ? (isColon ? 'clock-colon-wrap' : 'top-digit-wrap') : 'cell';
             wrap.innerHTML = `<div class="dim">${isColon ? ':' : '8'}</div>`;
-            if (char !== " " && char !== "") {
+            if (char && char !== " ") {
                 const b = document.createElement('div');
                 b.className = 'bright';
                 b.textContent = char;
@@ -97,12 +94,14 @@
                 const vals = await response.json(); 
                 if (!vals) return;
 
-                // 1. Clock & Batter IDs
+                // 1. TOP ROW: Hardcoded Batter IDs (0, 1) and Clock
                 const r0 = document.getElementById('row0');
                 r0.innerHTML = '';
-                const timeStr = new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'});
-                const b1 = (vals[0] || "").toString().padStart(2," ").slice(-2);
-                const b2 = (vals[1] || "").toString().padStart(2," ").slice(-2);
+                const timeStr = new Date().getHours().toString().padStart(2,'0') + ":" + new Date().getMinutes().toString().padStart(2,'0');
+                
+                // Batter IDs (Small numbers)
+                const b1_id = (vals[0] ?? "").toString().padStart(2," ").slice(-2);
+                const b2_id = (vals[1] ?? "").toString().padStart(2," ").slice(-2);
 
                 const grp = (s, isT) => {
                     const d = document.createElement('div');
@@ -110,9 +109,9 @@
                     [...s].forEach(c => d.appendChild(createDigit(c, c === ':', true)));
                     return d;
                 };
-                r0.append(grp(b1), grp(timeStr, true), grp(b2));
+                r0.append(grp(b1_id), grp(timeStr, true), grp(b2_id));
 
-                // 2. Main Rows
+                // 2. MAIN GRID (Rows 1-4)
                 ROWS.forEach((rowConfigs, rowIndex) => {
                     const rowId = `row${rowIndex + 1}`;
                     const container = document.getElementById(rowId);
@@ -120,9 +119,12 @@
 
                     rowConfigs.forEach(([name, dataIdx], colIndex) => {
                         const val = vals[dataIdx];
+                        
+                        // Set Label active state
                         const active = (val !== null && val !== undefined && val.toString().trim() !== "");
                         document.getElementById(`lbl-${rowIndex + 1}-${colIndex}`).classList.toggle('inactive', !active);
 
+                        // Pad with spaces for cricket-style numbers
                         const str = (val ?? "").toString().padStart(3, " ").slice(-3);
                         [...str].forEach(char => container.appendChild(createDigit(char)));
 
