@@ -24,14 +24,12 @@
         #board {
             width: 95vw; 
             max-width: 1100px;
-            /* Using standard zoom/transform for older browsers */
             -webkit-transform: scale(1.1);
             transform: scale(1.1);
             -webkit-transform-origin: center;
             transform-origin: center;
         }
 
-        /* Large visible button for easy clicking/tapping */
         #fs-btn {
             position: fixed;
             top: 10px;
@@ -42,6 +40,7 @@
             border: 2px solid #666;
             z-index: 1000;
             font-size: 16px;
+            display: block; /* Shown by default */
         }
 
         .row-container { width: 100%; margin-bottom: 10px; }
@@ -80,17 +79,21 @@
     <div id="board"></div>
 
     <script>
-        // Use 'var' and 'function' only - no 'const', 'let', or '=>' for Chromecast 1
         var fsBtn = document.getElementById('fs-btn');
-        
+        var userAgent = navigator.userAgent || "";
+
+        // Auto-hide button if on Chromecast
+        if (userAgent.indexOf('CrKey') > -1 || userAgent.indexOf('Chromecast') > -1) {
+            fsBtn.style.display = 'none';
+        }
+
         fsBtn.onclick = function() {
             var el = document.documentElement;
-            // Support for older WebKit (Chromecast) and standard API
             var requestMethod = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullScreen;
 
             if (requestMethod) { 
                 requestMethod.call(el);
-                fsBtn.style.display = 'none'; // Hide button after activation
+                fsBtn.style.display = 'none';
             }
         };
 
@@ -132,7 +135,6 @@
         board.innerHTML = boardHtml;
 
         function updateScore() {
-            // Using standard XMLHttpRequest if fetch is missing on very old firmware
             var xhr = new XMLHttpRequest();
             xhr.open('GET', 'https://api.npoint.io/' + NPOINT_ID + '?t=' + Date.now(), true);
             xhr.onreadystatechange = function () {
@@ -198,7 +200,7 @@
             xhr.send();
         }
 
-        setInterval(updateScore, 5000); // 5s interval is safer for old Chromecast CPUs
+        setInterval(updateScore, 5000);
         updateScore();
     </script>
 </body>
