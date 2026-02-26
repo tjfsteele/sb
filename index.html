@@ -4,7 +4,11 @@
     <title>Scoreboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf'); }
+        /* Using a more robust font-face declaration for older browsers */
+        @font-face { 
+            font-family: 'DSEG7'; 
+            src: url('DSEG7.ttf') format('truetype'); 
+        }
         body { background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; }
         
         .row-container { width: 700px; margin-bottom: 2vh; display: flex; flex-direction: column; }
@@ -15,125 +19,139 @@
         
         .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: flex; justify-content: center; align-items: center; aspect-ratio: 1 / 1.5; }
         .top-digit-wrap { width: 3.8vh; }
-        .clock-colon-wrap { width: 1.8vh; }
-        .cell { width: 100%; }
+        .clock-colon-wrap { width: 1.5vh; }
 
-        .dim, .bright { font-family: 'DSEG7', monospace; line-height: 1; position: absolute; }
-        .dim { color: #180300; z-index: 1; }
-        .bright { color: #ff5500; z-index: 2; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
-
-        .digit-row .dim, .digit-row .bright { font-size: 8vh; }
-        #row0 .dim, #row0 .bright { font-size: 5.33vh; }
-        .clock-colon-wrap .bright, .clock-colon-wrap .dim { transform: translateY(-5%); }
-
-        .label-row { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 2px; }
-        .label { text-transform: uppercase; font-weight: bold; text-align: center; font-size: 5vh; color: white; padding: 0.5vh 0; transition: color 0.4s ease; }
-        .label.inactive { color: #222; }
+        .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; line-height: 1; }
+        .digit { color: #f00; z-index: 2; text-shadow: 0 0 5px rgba(255,0,0,0.5); font-size: 85px; }
+        .digit-bg { color: #200; z-index: 1; font-size: 85px; }
         
-        #fs-btn { position: fixed; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.1); color: #666; border: 1px solid #444; padding: 8px 12px; cursor: pointer; font-size: 12px; border-radius: 4px; z-index: 100; }
+        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 40px; }
+        .clock-colon-wrap .digit { font-size: 35px; top: -2px; }
 
-        @media (max-width: 767px) {
-            .row-container { width: 96vw; }
-            .digit-row .dim, .digit-row .bright { font-size: 8.5vw; }
-            #row0 .dim, #row0 .bright { font-size: 6vw; }
-            .label { font-size: 5.2vw; } 
-            .top-digit-wrap { width: 4.5vw; }
-            .clock-colon-wrap { width: 2.5vw; }
-        }
+        .label-row { display: grid; grid-template-columns: 1fr 1fr 1fr; width: 100%; margin-bottom: 0.5vh; }
+        .label { text-transform: uppercase; font-size: 14px; font-weight: bold; color: #aaa; text-align: center; }
+        .label.inactive { color: #222; }
     </style>
 </head>
 <body>
-    <button id="fs-btn" onclick="document.documentElement.requestFullscreen()">FULLSCREEN</button>
-
     <div id="board"></div>
 
     <script>
-        const NPOINT_ID = "e5ab2c288d26e7ce23ca"; 
-
-        // Structure: [Display Name, Data Index for Large Number]
-        const ROWS = [
-            [["Batter", 2],   ["Total", 4],   ["Batter", 3]],     // Scores for B1, Total, B2
+        // Use 'var' instead of 'const/let' for 1st Gen Chromecast compatibility
+        var NPOINT_ID = "e5ab2c288d26e7ce23ca";
+        var ROWS = [
+            [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
             [["Extras", 7],   ["Wickets", 5], ["Overs", 6]],
             [["1st Inns", 10],["Last Man", 8],["Overs Rem", 12]],
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        // Init HTML
-        const board = document.getElementById('board');
-        board.innerHTML = `<div class="row-container"><div id="row0" class="top-row-grid"></div></div>`;
-
-        ROWS.forEach((rowConfigs, rowIndex) => {
-            const rowNum = rowIndex + 1;
-            const container = document.createElement('div');
-            container.className = 'row-container';
-            container.innerHTML = `
-                <div class="label-row">
-                    ${rowConfigs.map((cfg, col) => `<div id="lbl-${rowNum}-${col}" class="label">${cfg[0]}</div>`).join('')}
-                </div>
-                <div id="row${rowNum}" class="digit-row"></div>
-            `;
-            board.appendChild(container);
-        });
-
-        function createDigit(char, isColon = false, isTopRow = false) {
-            const wrap = document.createElement('div');
-            wrap.className = isTopRow ? (isColon ? 'clock-colon-wrap' : 'top-digit-wrap') : 'cell';
-            wrap.innerHTML = `<div class="dim">${isColon ? ':' : '8'}</div>`;
-            if (char && char !== " ") {
-                const b = document.createElement('div');
-                b.className = 'bright';
-                b.textContent = char;
-                wrap.appendChild(b);
-            }
+        function createDigit(char, isColon, isSmall) {
+            var wrap = document.createElement('div');
+            wrap.className = isColon ? 'clock-colon-wrap' : (isSmall ? 'top-digit-wrap' : 'cell');
+            
+            var bg = document.createElement('div');
+            bg.className = 'digit-bg';
+            bg.innerHTML = isColon ? ':' : '8';
+            
+            var fg = document.createElement('div');
+            fg.className = 'digit';
+            fg.innerHTML = char;
+            
+            wrap.appendChild(bg);
+            wrap.appendChild(fg);
             return wrap;
         }
 
-        async function updateScore() {
-            try {
-                const response = await fetch(`https://api.npoint.io/${NPOINT_ID}?t=${Date.now()}`);
-                const vals = await response.json(); 
-                if (!vals) return;
+        // Initialize Board structure without backticks or arrow functions
+        var board = document.getElementById('board');
+        var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
+        for (var i = 0; i < ROWS.length; i++) {
+            var rowNum = i + 1;
+            boardHtml += '<div class="row-container">' +
+                            '<div class="label-row">' +
+                                '<div id="lbl-' + rowNum + '-0" class="label"></div>' +
+                                '<div id="lbl-' + rowNum + '-1" class="label"></div>' +
+                                '<div id="lbl-' + rowNum + '-2" class="label"></div>' +
+                            '</div>' +
+                            '<div id="row' + rowNum + '" class="digit-row"></div>' +
+                         '</div>';
+        }
+        board.innerHTML = boardHtml;
 
-                // 1. TOP ROW: Hardcoded Batter IDs (0, 1) and Clock
-                const r0 = document.getElementById('row0');
-                r0.innerHTML = '';
-                const timeStr = new Date().getHours().toString().padStart(2,'0') + ":" + new Date().getMinutes().toString().padStart(2,'0');
-                
-                // Batter IDs (Small numbers)
-                const b1_id = (vals[0] ?? "").toString().padStart(2," ").slice(-2);
-                const b2_id = (vals[1] ?? "").toString().padStart(2," ").slice(-2);
+        function updateScore() {
+            // Using .then() instead of async/await
+            fetch('https://api.npoint.io/' + NPOINT_ID + '?t=' + Date.now())
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(vals) {
+                    if (!vals) return;
 
-                const grp = (s, isT) => {
-                    const d = document.createElement('div');
-                    d.className = isT ? 'clock-group' : 'batter-id-group';
-                    [...s].forEach(c => d.appendChild(createDigit(c, c === ':', true)));
-                    return d;
-                };
-                r0.append(grp(b1_id), grp(timeStr, true), grp(b2_id));
+                    // 1. TOP ROW
+                    var r0 = document.getElementById('row0');
+                    r0.innerHTML = '';
+                    
+                    var b1_id = (vals[0] || "").toString().padStart(2, " ");
+                    var b2_id = (vals[1] || "").toString().padStart(2, " ");
+                    var now = new Date();
+                    var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
 
-                // 2. MAIN GRID (Rows 1-4)
-                ROWS.forEach((rowConfigs, rowIndex) => {
-                    const rowId = `row${rowIndex + 1}`;
-                    const container = document.getElementById(rowId);
-                    container.innerHTML = '';
+                    var grp = function(s, isClock) {
+                        var d = document.createElement('div');
+                        d.className = isClock ? 'clock-group' : 'batter-id-group';
+                        var chars = s.split('');
+                        for (var k = 0; k < chars.length; k++) {
+                            var c = chars[k];
+                            d.appendChild(createDigit(c, c === ':', true));
+                        }
+                        return d;
+                    };
+                    r0.appendChild(grp(b1_id));
+                    r0.appendChild(grp(timeStr, true));
+                    r0.appendChild(grp(b2_id));
 
-                    rowConfigs.forEach(([name, dataIdx], colIndex) => {
-                        const val = vals[dataIdx];
-                        
-                        // Set Label active state
-                        const active = (val !== null && val !== undefined && val.toString().trim() !== "");
-                        document.getElementById(`lbl-${rowIndex + 1}-${colIndex}`).classList.toggle('inactive', !active);
+                    // 2. MAIN GRID
+                    for (var r = 0; r < ROWS.length; r++) {
+                        var rowConfigs = ROWS[r];
+                        var rowId = 'row' + (r + 1);
+                        var container = document.getElementById(rowId);
+                        container.innerHTML = '';
 
-                        // Pad with spaces for cricket-style numbers
-                        const str = (val ?? "").toString().padStart(3, " ").slice(-3);
-                        [...str].forEach(char => container.appendChild(createDigit(char)));
+                        for (var c = 0; c < rowConfigs.length; c++) {
+                            var config = rowConfigs[c];
+                            var name = config[0];
+                            var dataIdx = config[1];
+                            var val = vals[dataIdx];
 
-                        if (colIndex < 2) container.appendChild(document.createElement('div')).className = 'cell';
-                    });
+                            // Label Logic
+                            var labelEl = document.getElementById('lbl-' + (r + 1) + '-' + c);
+                            labelEl.innerHTML = name;
+                            var isActive = (val !== null && val !== undefined && val.toString().trim() !== "");
+                            labelEl.className = isActive ? 'label' : 'label inactive';
+
+                            // Digit Logic
+                            var str = (val === null || val === undefined ? "" : val).toString();
+                            str = str.slice(-3).padStart(3, " ");
+                            var strChars = str.split('');
+                            for (var m = 0; m < strChars.length; m++) {
+                                container.appendChild(createDigit(strChars[m]));
+                            }
+
+                            if (c < 2) {
+                                var spacer = document.createElement('div');
+                                spacer.className = 'cell';
+                                container.appendChild(spacer);
+                            }
+                        }
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Fetch error:', err);
                 });
-            } catch (e) { console.error(e); }
         }
 
+        // 3 second interval
         setInterval(updateScore, 3000);
         updateScore();
     </script>
