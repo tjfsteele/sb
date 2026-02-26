@@ -17,19 +17,38 @@
             overflow: hidden;
             display: flex;
             justify-content: center;
+            align-items: center; /* Center vertically for full screen */
+            height: 100vh;
+            cursor: crosshair; /* Helps locate cursor if hidden */
         }
 
         #board {
-            /* Increased base width and applied 1.1 scale for 10% boost */
-            width: 1050px; 
-            padding-top: 60px; 
-            transform: scale(1.1);
-            transform-origin: top center;
+            /* Changed to relative units to fill the screen width */
+            width: 95vw; 
+            max-width: 1200px;
+            /* Remove the fixed scale(1.1) to allow browser to handle layout */
+            transition: transform 0.3s ease;
         }
+
+        /* Full Screen Button Styling */
+        #fs-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 15px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+            opacity: 0.2; /* Subtle until hovered */
+        }
+        #fs-btn:hover { opacity: 1; }
 
         .row-container { 
             width: 100%; 
-            margin-bottom: 8px; /* Slightly tighter to handle the 10% zoom height */
+            margin-bottom: 2vh; /* Use vh for responsive spacing */
         }
 
         .top-row-grid { 
@@ -37,7 +56,7 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 3vh;
         }
 
         .digit-row { 
@@ -55,13 +74,14 @@
         .cell, .top-digit-wrap, .clock-colon-wrap { 
             position: relative; 
             display: inline-block;
-            width: 55px;   
+            width: 5vw;   /* Scale cells with screen width */
+            max-width: 55px;
             height: 70px;  
-            margin: 0 3px;
+            margin: 0 0.5vw;
         }
         
-        .top-digit-wrap { width: 35px; height: 40px; }
-        .clock-colon-wrap { width: 20px; height: 40px; }
+        .top-digit-wrap { width: 3vw; max-width: 35px; height: 40px; }
+        .clock-colon-wrap { width: 2vw; max-width: 20px; height: 40px; }
 
         .digit, .digit-bg { 
             font-family: 'DSEG7'; 
@@ -72,7 +92,7 @@
         }
         
         .digit { color: #f00; z-index: 2; font-size: 70px; line-height: 70px; text-shadow: 0 0 8px rgba(255,0,0,0.7); }
-        .digit-bg { color: #010808; z-index: 1; font-size: 70px; line-height: 70px; }
+        .digit-bg { color: #111; z-index: 1; font-size: 70px; line-height: 70px; }
         
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 40px; line-height: 40px; }
         .clock-colon-wrap .digit { font-size: 35px; line-height: 40px; top: -3px; }
@@ -85,7 +105,8 @@
         }
         .label { 
             text-transform: uppercase; 
-            font-size: 29px; 
+            font-size: 2.5vw; /* Responsive text */
+            max-size: 29px;
             font-weight: bold; 
             color: #ccc; 
             width: 32%;
@@ -93,20 +114,32 @@
         }
         .label.inactive { color: #0a0a0a; }
 
-        /* Media queries to handle the scale on smaller screens */
-        @media (max-width: 1100px) {
-            #board { transform: scale(0.9); }
-        }
-        @media (max-width: 600px) {
-            #board { transform: scale(0.7); padding-top: 80px; }
-            body { overflow: visible; }
+        /* Fullscreen-specific tweak */
+        :fullscreen #board {
+            transform: scale(1.2); /* Extra boost when in actual fullscreen mode */
         }
     </style>
 </head>
 <body>
+    <button id="fs-btn">Go Fullscreen</button>
     <div id="board"></div>
 
     <script>
+        // --- Full Screen Logic ---
+        const fsBtn = document.getElementById('fs-btn');
+        fsBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+                fsBtn.textContent = "Exit Fullscreen";
+            } else {
+                document.exitFullscreen();
+                fsBtn.textContent = "Go Fullscreen";
+            }
+        });
+
+        // --- Your Original Logic (Optimized) ---
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
         var ROWS = [
             [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
@@ -159,6 +192,7 @@
 
                     var group = function(arr) {
                         var d = document.createElement('div');
+                        d.style.display = "flex";
                         for(var k=0; k<arr.length; k++) d.appendChild(createDigit(arr[k], arr[k]===':', true));
                         return d;
                     };
@@ -194,13 +228,6 @@
 
         setInterval(updateScore, 3000);
         updateScore();
-        document.getElementById('fs-btn').addEventListener('click', function() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-                this.style.display = 'none'; // Hide button after going fullscreen
-            }
-        });
     </script>
-    <button id="fs-btn" style="position:fixed; top:10px; right:10px; z-index:100; opacity:0.3;">⛶</button>
 </body>
 </html>
