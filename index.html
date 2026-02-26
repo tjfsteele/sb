@@ -17,78 +17,51 @@
             overflow: hidden;
             display: flex;
             justify-content: center;
-            align-items: center; /* Center vertically for full screen */
+            align-items: center;
             height: 100vh;
-            cursor: crosshair; /* Helps locate cursor if hidden */
         }
 
         #board {
-            /* Changed to relative units to fill the screen width */
             width: 95vw; 
-            max-width: 1200px;
-            /* Remove the fixed scale(1.1) to allow browser to handle layout */
-            transition: transform 0.3s ease;
+            max-width: 1100px;
+            /* Using standard zoom/transform for older browsers */
+            -webkit-transform: scale(1.1);
+            transform: scale(1.1);
+            -webkit-transform-origin: center;
+            transform-origin: center;
         }
 
-        /* Full Screen Button Styling */
+        /* Large visible button for easy clicking/tapping */
         #fs-btn {
             position: fixed;
             top: 10px;
             right: 10px;
-            padding: 10px 15px;
-            background: #333;
+            padding: 15px;
+            background: #444;
             color: white;
-            border: 1px solid #555;
-            border-radius: 5px;
-            cursor: pointer;
+            border: 2px solid #666;
             z-index: 1000;
-            opacity: 0.2; /* Subtle until hovered */
-        }
-        #fs-btn:hover { opacity: 1; }
-
-        .row-container { 
-            width: 100%; 
-            margin-bottom: 2vh; /* Use vh for responsive spacing */
+            font-size: 16px;
         }
 
-        .top-row-grid { 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 3vh;
-        }
-
-        .digit-row { 
-            display: flex;
-            width: 100%;
-            justify-content: space-between;
-        }
-
-        .group-wrap {
-            display: flex;
-            justify-content: center;
-            width: 32%;
-        }
+        .row-container { width: 100%; margin-bottom: 10px; }
+        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
+        .digit-row { display: flex; width: 100%; justify-content: space-between; }
+        .group-wrap { display: flex; justify-content: center; width: 32%; }
 
         .cell, .top-digit-wrap, .clock-colon-wrap { 
             position: relative; 
             display: inline-block;
-            width: 5vw;   /* Scale cells with screen width */
-            max-width: 55px;
-            height: 70px;  
-            margin: 0 0.5vw;
+            width: 55px; height: 70px; margin: 0 3px;
         }
         
-        .top-digit-wrap { width: 3vw; max-width: 35px; height: 40px; }
-        .clock-colon-wrap { width: 2vw; max-width: 20px; height: 40px; }
+        .top-digit-wrap { width: 35px; height: 40px; }
+        .clock-colon-wrap { width: 20px; height: 40px; }
 
         .digit, .digit-bg { 
             font-family: 'DSEG7'; 
             position: absolute; 
-            left: 0; 
-            width: 100%; 
-            text-align: center;
+            left: 0; width: 100%; text-align: center;
         }
         
         .digit { color: #f00; z-index: 2; font-size: 70px; line-height: 70px; text-shadow: 0 0 8px rgba(255,0,0,0.7); }
@@ -97,49 +70,30 @@
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 40px; line-height: 40px; }
         .clock-colon-wrap .digit { font-size: 35px; line-height: 40px; top: -3px; }
 
-        .label-row { 
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            margin-bottom: 2px;
-        }
-        .label { 
-            text-transform: uppercase; 
-            font-size: 2.5vw; /* Responsive text */
-            max-size: 29px;
-            font-weight: bold; 
-            color: #ccc; 
-            width: 32%;
-            text-align: center;
-        }
+        .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px; }
+        .label { text-transform: uppercase; font-size: 26px; font-weight: bold; color: #ccc; width: 32%; text-align: center; }
         .label.inactive { color: #0a0a0a; }
-
-        /* Fullscreen-specific tweak */
-        :fullscreen #board {
-            transform: scale(1.2); /* Extra boost when in actual fullscreen mode */
-        }
     </style>
 </head>
 <body>
-    <button id="fs-btn">Go Fullscreen</button>
+    <button id="fs-btn">FULLSCREEN</button>
     <div id="board"></div>
 
     <script>
-        // --- Full Screen Logic ---
-        const fsBtn = document.getElementById('fs-btn');
-        fsBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    alert(`Error attempting to enable full-screen mode: ${err.message}`);
-                });
-                fsBtn.textContent = "Exit Fullscreen";
-            } else {
-                document.exitFullscreen();
-                fsBtn.textContent = "Go Fullscreen";
-            }
-        });
+        // Use 'var' and 'function' only - no 'const', 'let', or '=>' for Chromecast 1
+        var fsBtn = document.getElementById('fs-btn');
+        
+        fsBtn.onclick = function() {
+            var el = document.documentElement;
+            // Support for older WebKit (Chromecast) and standard API
+            var requestMethod = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullScreen;
 
-        // --- Your Original Logic (Optimized) ---
+            if (requestMethod) { 
+                requestMethod.call(el);
+                fsBtn.style.display = 'none'; // Hide button after activation
+            }
+        };
+
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
         var ROWS = [
             [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
@@ -163,10 +117,10 @@
         }
 
         var board = document.getElementById('board');
-        var html = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
+        var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
         for (var i = 0; i < ROWS.length; i++) {
             var rNum = i + 1;
-            html += '<div class="row-container">' +
+            boardHtml += '<div class="row-container">' +
                         '<div class="label-row">' +
                             '<div id="lbl-' + rNum + '-0" class="label"></div>' +
                             '<div id="lbl-' + rNum + '-1" class="label"></div>' +
@@ -175,31 +129,43 @@
                         '<div id="row' + rNum + '" class="digit-row"></div>' +
                     '</div>';
         }
-        board.innerHTML = html;
+        board.innerHTML = boardHtml;
 
         function updateScore() {
-            fetch('https://api.npoint.io/' + NPOINT_ID + '?t=' + Date.now())
-                .then(function(res) { return res.json(); })
-                .then(function(vals) {
+            // Using standard XMLHttpRequest if fetch is missing on very old firmware
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'https://api.npoint.io/' + NPOINT_ID + '?t=' + Date.now(), true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var vals = JSON.parse(xhr.responseText);
                     if (!vals) return;
 
                     var r0 = document.getElementById('row0');
                     r0.innerHTML = '';
-                    var b1 = (vals[0] || "").toString().padStart(2, " ").split('');
-                    var b2 = (vals[1] || "").toString().padStart(2, " ").split('');
-                    var now = new Date();
-                    var timeStr = (now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')).split('');
+                    
+                    var b1 = (vals[0] || "").toString();
+                    while(b1.length < 2) b1 = " " + b1;
+                    
+                    var b2 = (vals[1] || "").toString();
+                    while(b2.length < 2) b2 = " " + b2;
 
-                    var group = function(arr) {
+                    var now = new Date();
+                    var hh = now.getHours().toString();
+                    var mm = now.getMinutes().toString();
+                    if(hh.length < 2) hh = "0" + hh;
+                    if(mm.length < 2) mm = "0" + mm;
+                    var timeStr = (hh + ":" + mm).split('');
+
+                    var makeGroup = function(arr) {
                         var d = document.createElement('div');
                         d.style.display = "flex";
                         for(var k=0; k<arr.length; k++) d.appendChild(createDigit(arr[k], arr[k]===':', true));
                         return d;
                     };
 
-                    r0.appendChild(group(b1));
-                    r0.appendChild(group(timeStr));
-                    r0.appendChild(group(b2));
+                    r0.appendChild(makeGroup(b1.split('')));
+                    r0.appendChild(makeGroup(timeStr));
+                    r0.appendChild(makeGroup(b2.split('')));
 
                     for (var r = 0; r < ROWS.length; r++) {
                         var container = document.getElementById('row' + (r + 1));
@@ -213,20 +179,26 @@
                             var value = vals[rowData[c][1]];
                             var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
                             lbl.innerHTML = labelText;
-                            var isActive = (value !== null && value !== undefined && value.toString().trim() !== "");
+                            
+                            var isActive = (value !== null && value !== undefined && value.toString().replace(/\s/g, '') !== "");
                             lbl.className = isActive ? 'label' : 'label inactive';
-                            var chars = (value === null || value === undefined ? "" : value).toString().slice(-3).padStart(3, " ").split('');
+                            
+                            var valStr = (value === null || value === undefined ? "" : value).toString().slice(-3);
+                            while(valStr.length < 3) valStr = " " + valStr;
+                            var chars = valStr.split('');
+
                             for (var m = 0; m < chars.length; m++) {
                                 gWrap.appendChild(createDigit(chars[m]));
                             }
                             container.appendChild(gWrap);
                         }
                     }
-                })
-                .catch(function(err) { console.error(err); });
+                }
+            };
+            xhr.send();
         }
 
-        setInterval(updateScore, 3000);
+        setInterval(updateScore, 5000); // 5s interval is safer for old Chromecast CPUs
         updateScore();
     </script>
 </body>
