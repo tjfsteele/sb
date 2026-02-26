@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Cricket Scoreboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         @font-face { 
             font-family: 'DSEG7'; 
@@ -30,21 +30,43 @@
             transform-origin: center;
         }
 
+        /* Subtle, dark fullscreen button */
         #fs-btn {
             position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 15px;
-            background: #444;
-            color: white;
-            border: 2px solid #666;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            background: #1a1a1a;
+            color: #444;
+            border: 1px solid #333;
             z-index: 1000;
-            font-size: 16px;
-            display: block; /* Shown by default */
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            display: block;
+            outline: none;
+        }
+        #fs-btn:hover { color: #888; border-color: #555; }
+
+        /* MOBILE OVERRIDES */
+        @media (max-width: 600px) {
+            #board {
+                -webkit-transform: scale(1.0);
+                transform: scale(1.0);
+                width: 98vw;
+            }
+            .cell { width: 28px !important; height: 40px !important; margin: 0 1px !important; }
+            .digit, .digit-bg { font-size: 38px !important; line-height: 40px !important; }
+            .label { font-size: 14px !important; }
+            .top-digit-wrap { width: 20px !important; height: 25px !important; }
+            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 22px !important; line-height: 25px !important; }
+            .clock-colon-wrap { width: 10px !important; height: 25px !important; }
+            .clock-colon-wrap .digit { font-size: 20px !important; line-height: 25px !important; }
         }
 
         .row-container { width: 100%; margin-bottom: 10px; }
-        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
+        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         .group-wrap { display: flex; justify-content: center; width: 32%; }
 
@@ -75,14 +97,14 @@
     </style>
 </head>
 <body>
-    <button id="fs-btn">FULLSCREEN</button>
+    <button id="fs-btn">[ ]</button>
     <div id="board"></div>
 
     <script>
         var fsBtn = document.getElementById('fs-btn');
         var userAgent = navigator.userAgent || "";
 
-        // Auto-hide button if on Chromecast
+        // Hide button on Chromecast
         if (userAgent.indexOf('CrKey') > -1 || userAgent.indexOf('Chromecast') > -1) {
             fsBtn.style.display = 'none';
         }
@@ -90,7 +112,6 @@
         fsBtn.onclick = function() {
             var el = document.documentElement;
             var requestMethod = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullScreen;
-
             if (requestMethod) { 
                 requestMethod.call(el);
                 fsBtn.style.display = 'none';
@@ -147,7 +168,6 @@
                     
                     var b1 = (vals[0] || "").toString();
                     while(b1.length < 2) b1 = " " + b1;
-                    
                     var b2 = (vals[1] || "").toString();
                     while(b2.length < 2) b2 = " " + b2;
 
