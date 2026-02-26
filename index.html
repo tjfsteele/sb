@@ -100,7 +100,15 @@
         </div>
         <div id="row3" class="digit-row"></div>
     </div>
-
+    
+    <div class="row-container">
+        <div class="label-row">
+            <div id="lbl-ext" class="label">Extras</div>
+            <div id="lbl-lmn" class="label">Last Man</div>
+            <div id="lbl-lwk" class="label">Last Wkt</div>
+        </div>
+        <div id="row4" class="digit-row"></div>
+    </div>
     <script>
         const NPOINT_ID = "e5ab2c288d26e7ce23ca"; 
 
@@ -169,9 +177,11 @@
                     (pad(vals[2], 3) + " " + pad(vals[4], 3) + " " + pad(vals[3], 3)).split(''), 
                     (pad(vals[10], 3) + " " + pad(vals[5], 3) + " " + pad(vals[6], 3)).split(''), 
                     (pad(vals[13], 3) + " " + pad(vals[11], 3) + " " + pad(vals[12], 3)).split('')
+                    (pad(vals[7], 3) + " " + pad(vals[8], 3) + " " + pad(vals[9], 3)).split('')
+
                 ];
 
-                ['row1', 'row2', 'row3'].forEach((id, rIdx) => {
+                ['row1', 'row2', 'row3', "row4"].forEach((id, rIdx) => {
                     const container = document.getElementById(id);
                     container.innerHTML = '';
                     rowsData[rIdx].forEach((char, cIdx) => {
