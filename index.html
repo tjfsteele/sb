@@ -20,25 +20,23 @@
         }
 
         #board {
-            width: 1000px; /* Fixed width for consistent layout */
-            margin-top: 20px;
+            width: 960px; 
+            margin-top: 10px; /* Reduced top margin */
         }
 
         .row-container { 
             width: 100%; 
-            margin-bottom: 25px;
+            margin-bottom: 12px; /* Tightened row spacing to fit vertically */
         }
 
-        /* Top Row Layout */
         .top-row-grid { 
             display: flex;
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            margin-bottom: 30px;
+            margin-bottom: 15px; /* Reduced space under clock */
         }
 
-        /* Digit Rows */
         .digit-row { 
             display: flex;
             width: 100%;
@@ -55,12 +53,12 @@
             position: relative; 
             display: inline-block;
             width: 55px;   
-            height: 85px;  
+            height: 70px;  /* Shorter height to fit screen */
             margin: 0 3px;
         }
         
-        .top-digit-wrap { width: 35px; height: 50px; }
-        .clock-colon-wrap { width: 20px; height: 50px; }
+        .top-digit-wrap { width: 35px; height: 40px; }
+        .clock-colon-wrap { width: 20px; height: 40px; }
 
         .digit, .digit-bg { 
             font-family: 'DSEG7'; 
@@ -70,37 +68,39 @@
             text-align: center;
         }
         
-        /* Large Red Digits */
-        .digit { color: #f00; z-index: 2; font-size: 80px; line-height: 85px; text-shadow: 0 0 8px rgba(255,0,0,0.7); }
-        .digit-bg { color: #211; z-index: 1; font-size: 80px; line-height: 85px; }
+        /* Digits slightly shorter to fit 1st Gen Chromecast height */
+        .digit { color: #f00; z-index: 2; font-size: 70px; line-height: 70px; text-shadow: 0 0 8px rgba(255,0,0,0.7); }
+        .digit-bg { color: #211; z-index: 1; font-size: 70px; line-height: 70px; }
         
-        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 45px; line-height: 50px; }
-        .clock-colon-wrap .digit { font-size: 40px; line-height: 50px; top: -3px; }
+        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 40px; line-height: 40px; }
+        .clock-colon-wrap .digit { font-size: 35px; line-height: 40px; top: -3px; }
 
-        /* Labels - Large and Grey */
+        /* LABELS - 30% Bigger as requested */
         .label-row { 
             display: flex;
             justify-content: space-between;
             width: 100%;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         .label { 
             text-transform: uppercase; 
-            font-size: 24px; 
+            font-size: 32px; /* Increased from 24px */
             font-weight: bold; 
-            color: #bbb; 
+            color: #ccc; 
             width: 32%;
             text-align: center;
+            letter-spacing: 1px;
         }
-        .label.inactive { color: #1a1a1a; }
+        .label.inactive { color: #111; }
 
-        /* Mobile / Small Screen Scaling */
+        /* RESPONSIVE SCALING */
         @media (max-width: 1000px) {
-            #board { transform: scale(0.9); transform-origin: top center; }
+            #board { transform: scale(0.95); transform-origin: top center; }
         }
+        /* Mobile: Increased scale from 0.4 to 0.7 so it's not "too small" */
         @media (max-width: 600px) {
-            #board { transform: scale(0.4); transform-origin: top center; }
-            body { overflow: auto; }
+            #board { transform: scale(0.7); transform-origin: top center; margin-top: 50px; }
+            body { overflow: visible; }
         }
     </style>
 </head>
@@ -130,7 +130,6 @@
             return wrap;
         }
 
-        // Initialize Board structure
         var board = document.getElementById('board');
         var html = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
         for (var i = 0; i < ROWS.length; i++) {
@@ -152,7 +151,6 @@
                 .then(function(vals) {
                     if (!vals) return;
 
-                    // 1. TOP ROW (Batters IDs & Clock)
                     var r0 = document.getElementById('row0');
                     r0.innerHTML = '';
                     var b1 = (vals[0] || "").toString().padStart(2, " ").split('');
@@ -160,17 +158,16 @@
                     var now = new Date();
                     var timeStr = (now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')).split('');
 
-                    var group = function(arr, isClock) {
+                    var group = function(arr) {
                         var d = document.createElement('div');
                         for(var k=0; k<arr.length; k++) d.appendChild(createDigit(arr[k], arr[k]===':', true));
                         return d;
                     };
 
-                    r0.appendChild(group(b1, false));
-                    r0.appendChild(group(timeStr, true));
-                    r0.appendChild(group(b2, false));
+                    r0.appendChild(group(b1));
+                    r0.appendChild(group(timeStr));
+                    r0.appendChild(group(b2));
 
-                    // 2. MAIN GRID
                     for (var r = 0; r < ROWS.length; r++) {
                         var container = document.getElementById('row' + (r + 1));
                         container.innerHTML = '';
@@ -179,16 +176,12 @@
                         for (var c = 0; c < rowData.length; c++) {
                             var gWrap = document.createElement('div');
                             gWrap.className = 'group-wrap';
-                            
                             var labelText = rowData[c][0];
                             var value = vals[rowData[c][1]];
-                            
                             var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
                             lbl.innerHTML = labelText;
-                            
                             var isActive = (value !== null && value !== undefined && value.toString().trim() !== "");
                             lbl.className = isActive ? 'label' : 'label inactive';
-
                             var chars = (value === null || value === undefined ? "" : value).toString().slice(-3).padStart(3, " ").split('');
                             for (var m = 0; m < chars.length; m++) {
                                 gWrap.appendChild(createDigit(chars[m]));
@@ -197,7 +190,7 @@
                         }
                     }
                 })
-                .catch(function(err) { console.error('Error fetching score:', err); });
+                .catch(function(err) { console.error(err); });
         }
 
         setInterval(updateScore, 3000);
