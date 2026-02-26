@@ -20,14 +20,16 @@
         }
 
         #board {
-            width: 960px; 
-            /* Added blank strip at top to avoid overscan */
-            padding-top: 50px; 
+            /* Increased base width and applied 1.1 scale for 10% boost */
+            width: 1050px; 
+            padding-top: 60px; 
+            transform: scale(1.1);
+            transform-origin: top center;
         }
 
         .row-container { 
             width: 100%; 
-            margin-bottom: 10px; /* Further tightened for vertical fit */
+            margin-bottom: 8px; /* Slightly tighter to handle the 10% zoom height */
         }
 
         .top-row-grid { 
@@ -35,7 +37,7 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         .digit-row { 
@@ -75,7 +77,6 @@
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 40px; line-height: 40px; }
         .clock-colon-wrap .digit { font-size: 35px; line-height: 40px; top: -3px; }
 
-        /* LABELS - 10% smaller than previous turn (29px) */
         .label-row { 
             display: flex;
             justify-content: space-between;
@@ -92,11 +93,12 @@
         }
         .label.inactive { color: #111; }
 
-        @media (max-width: 1000px) {
-            #board { transform: scale(0.95); transform-origin: top center; }
+        /* Media queries to handle the scale on smaller screens */
+        @media (max-width: 1100px) {
+            #board { transform: scale(0.9); }
         }
         @media (max-width: 600px) {
-            #board { transform: scale(0.7); transform-origin: top center; padding-top: 80px; }
+            #board { transform: scale(0.7); padding-top: 80px; }
             body { overflow: visible; }
         }
     </style>
