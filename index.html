@@ -4,40 +4,90 @@
     <title>Scoreboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        /* Using a more robust font-face declaration for older browsers */
         @font-face { 
             font-family: 'DSEG7'; 
             src: url('DSEG7.ttf') format('truetype'); 
         }
-        body { background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; }
-        
-        .row-container { width: 700px; margin-bottom: 2vh; display: flex; flex-direction: column; }
-        .digit-row { display: grid; grid-template-columns: repeat(11, 1fr); column-gap: 2px; }
-        
-        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2.5vh; }
-        .batter-id-group, .clock-group { display: flex; align-items: center; gap: 0; }
-        
-        .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: flex; justify-content: center; align-items: center; aspect-ratio: 1 / 1.5; }
-        .top-digit-wrap { width: 3.8vh; }
-        .clock-colon-wrap { width: 1.5vh; }
+        body { 
+            background: black; 
+            margin: 0; 
+            padding: 0;
+            font-family: Arial, sans-serif; 
+            color: white; 
+            overflow: hidden; 
+            text-align: center;
+        }
 
-        .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; line-height: 1; }
-        .digit { color: #f00; z-index: 2; text-shadow: 0 0 5px rgba(255,0,0,0.5); font-size: 85px; }
-        .digit-bg { color: #200; z-index: 1; font-size: 85px; }
-        
-        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 40px; }
-        .clock-colon-wrap .digit { font-size: 35px; top: -2px; }
+        /* Container that scales to the screen width */
+        #board {
+            width: 96vw;
+            margin: 0 auto;
+            padding-top: 2vh;
+        }
 
-        .label-row { display: grid; grid-template-columns: 1fr 1fr 1fr; width: 100%; margin-bottom: 0.5vh; }
-        .label { text-transform: uppercase; font-size: 14px; font-weight: bold; color: #aaa; text-align: center; }
-        .label.inactive { color: #222; }
+        .row-container { 
+            width: 100%; 
+            margin-bottom: 4vh;
+            clear: both;
+        }
+
+        /* Top Row Styling */
+        .top-row-grid { 
+            width: 100%;
+            margin-bottom: 5vh;
+            display: block;
+            overflow: hidden;
+        }
+        .top-left { float: left; width: 30%; text-align: left; }
+        .top-center { display: inline-block; width: 38%; text-align: center; }
+        .top-right { float: right; width: 30%; text-align: right; }
+
+        /* Digits and Backgrounds */
+        .cell, .top-digit-wrap, .clock-colon-wrap { 
+            position: relative; 
+            display: inline-block; 
+            vertical-align: middle;
+            aspect-ratio: 1 / 1.5;
+            width: 8vw; /* Scale to screen width */
+            height: 12vw;
+        }
+        .top-digit-wrap { width: 4.5vw; height: 7vw; }
+        .clock-colon-wrap { width: 2vw; height: 7vw; }
+
+        .digit, .digit-bg { 
+            font-family: 'DSEG7', monospace; 
+            position: absolute; 
+            left: 0; width: 100%; 
+            line-height: 1.1;
+        }
+        .digit { color: #f00; z-index: 2; text-shadow: 0 0 5px rgba(255,0,0,0.5); font-size: 10vw; }
+        .digit-bg { color: #200; z-index: 1; font-size: 10vw; }
+        
+        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 6vw; }
+        .clock-colon-wrap .digit { font-size: 5vw; top: -0.5vw; }
+
+        /* Labels: Much larger for visibility */
+        .label-row { width: 100%; margin-bottom: 0.5vh; display: block; overflow: hidden; }
+        .label { 
+            display: inline-block;
+            text-transform: uppercase; 
+            font-size: 2.8vw; 
+            font-weight: bold; 
+            color: #aaa; 
+            width: 32%;
+            text-align: center;
+        }
+        .label.inactive { color: #151515; }
+
+        .digit-row { width: 100%; display: block; }
+        .group-wrap { display: inline-block; width: 32%; text-align: center; }
+        .spacer { display: inline-block; width: 1%; }
     </style>
 </head>
 <body>
     <div id="board"></div>
 
     <script>
-        // Use 'var' instead of 'const/let' for 1st Gen Chromecast compatibility
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
         var ROWS = [
             [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
@@ -49,109 +99,93 @@
         function createDigit(char, isColon, isSmall) {
             var wrap = document.createElement('div');
             wrap.className = isColon ? 'clock-colon-wrap' : (isSmall ? 'top-digit-wrap' : 'cell');
-            
             var bg = document.createElement('div');
             bg.className = 'digit-bg';
             bg.innerHTML = isColon ? ':' : '8';
-            
             var fg = document.createElement('div');
             fg.className = 'digit';
             fg.innerHTML = char;
-            
             wrap.appendChild(bg);
             wrap.appendChild(fg);
             return wrap;
         }
 
-        // Initialize Board structure without backticks or arrow functions
+        // Setup the board structure
         var board = document.getElementById('board');
-        var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
+        var html = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
         for (var i = 0; i < ROWS.length; i++) {
-            var rowNum = i + 1;
-            boardHtml += '<div class="row-container">' +
-                            '<div class="label-row">' +
-                                '<div id="lbl-' + rowNum + '-0" class="label"></div>' +
-                                '<div id="lbl-' + rowNum + '-1" class="label"></div>' +
-                                '<div id="lbl-' + rowNum + '-2" class="label"></div>' +
-                            '</div>' +
-                            '<div id="row' + rowNum + '" class="digit-row"></div>' +
-                         '</div>';
+            var rNum = i + 1;
+            html += '<div class="row-container">' +
+                        '<div class="label-row">' +
+                            '<div id="lbl-' + rNum + '-0" class="label"></div>' +
+                            '<div id="lbl-' + rNum + '-1" class="label"></div>' +
+                            '<div id="lbl-' + rNum + '-2" class="label"></div>' +
+                        '</div>' +
+                        '<div id="row' + rNum + '" class="digit-row"></div>' +
+                    '</div>';
         }
-        board.innerHTML = boardHtml;
+        board.innerHTML = html;
 
         function updateScore() {
-            // Using .then() instead of async/await
             fetch('https://api.npoint.io/' + NPOINT_ID + '?t=' + Date.now())
-                .then(function(response) {
-                    return response.json();
-                })
+                .then(function(res) { return res.json(); })
                 .then(function(vals) {
                     if (!vals) return;
 
                     // 1. TOP ROW
                     var r0 = document.getElementById('row0');
                     r0.innerHTML = '';
-                    
-                    var b1_id = (vals[0] || "").toString().padStart(2, " ");
-                    var b2_id = (vals[1] || "").toString().padStart(2, " ");
+                    var b1 = (vals[0] || "").toString().padStart(2, " ").split('');
+                    var b2 = (vals[1] || "").toString().padStart(2, " ").split('');
                     var now = new Date();
-                    var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                    var time = (now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')).split('');
 
-                    var grp = function(s, isClock) {
-                        var d = document.createElement('div');
-                        d.className = isClock ? 'clock-group' : 'batter-id-group';
-                        var chars = s.split('');
-                        for (var k = 0; k < chars.length; k++) {
-                            var c = chars[k];
-                            d.appendChild(createDigit(c, c === ':', true));
-                        }
-                        return d;
-                    };
-                    r0.appendChild(grp(b1_id));
-                    r0.appendChild(grp(timeStr, true));
-                    r0.appendChild(grp(b2_id));
+                    var lDiv = document.createElement('div'); lDiv.className = 'top-left';
+                    for(var i=0; i<b1.length; i++) lDiv.appendChild(createDigit(b1[i], false, true));
+                    
+                    var cDiv = document.createElement('div'); cDiv.className = 'top-center';
+                    for(var j=0; j<time.length; j++) cDiv.appendChild(createDigit(time[j], time[j]===':', true));
+                    
+                    var rDiv = document.createElement('div'); rDiv.className = 'top-right';
+                    for(var k=0; k<b2.length; k++) rDiv.appendChild(createDigit(b2[k], false, true));
+
+                    r0.appendChild(lDiv); r0.appendChild(cDiv); r0.appendChild(rDiv);
 
                     // 2. MAIN GRID
                     for (var r = 0; r < ROWS.length; r++) {
-                        var rowConfigs = ROWS[r];
                         var rowId = 'row' + (r + 1);
                         var container = document.getElementById(rowId);
                         container.innerHTML = '';
+                        var configSet = ROWS[r];
 
-                        for (var c = 0; c < rowConfigs.length; c++) {
-                            var config = rowConfigs[c];
-                            var name = config[0];
-                            var dataIdx = config[1];
-                            var val = vals[dataIdx];
+                        for (var c = 0; c < configSet.length; c++) {
+                            var gWrap = document.createElement('div');
+                            gWrap.className = 'group-wrap';
+                            
+                            var name = configSet[c][0];
+                            var val = vals[configSet[c][1]];
+                            
+                            var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
+                            lbl.innerHTML = name;
+                            var active = (val !== null && val !== undefined && val.toString().trim() !== "");
+                            lbl.className = active ? 'label' : 'label inactive';
 
-                            // Label Logic
-                            var labelEl = document.getElementById('lbl-' + (r + 1) + '-' + c);
-                            labelEl.innerHTML = name;
-                            var isActive = (val !== null && val !== undefined && val.toString().trim() !== "");
-                            labelEl.className = isActive ? 'label' : 'label inactive';
-
-                            // Digit Logic
-                            var str = (val === null || val === undefined ? "" : val).toString();
-                            str = str.slice(-3).padStart(3, " ");
-                            var strChars = str.split('');
+                            var strChars = (val === null || val === undefined ? "" : val).toString().slice(-3).padStart(3, " ").split('');
                             for (var m = 0; m < strChars.length; m++) {
-                                container.appendChild(createDigit(strChars[m]));
+                                gWrap.appendChild(createDigit(strChars[m]));
                             }
-
+                            container.appendChild(gWrap);
                             if (c < 2) {
-                                var spacer = document.createElement('div');
-                                spacer.className = 'cell';
-                                container.appendChild(spacer);
+                                var s = document.createElement('div');
+                                s.className = 'spacer';
+                                container.appendChild(s);
                             }
                         }
                     }
                 })
-                .catch(function(err) {
-                    console.error('Fetch error:', err);
-                });
+                .catch(function(e) { console.error(e); });
         }
 
-        // 3 second interval
         setInterval(updateScore, 3000);
         updateScore();
     </script>
