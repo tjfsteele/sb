@@ -4,113 +4,41 @@
     <title>Cricket Scoreboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        @font-face { 
-            font-family: 'DSEG7'; 
-            src: url('DSEG7.ttf') format('truetype'); 
-        }
-        body { 
-            background: black; 
-            margin: 0; 
-            padding: 0;
-            font-family: Arial, sans-serif; 
-            color: white; 
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        #board {
-            width: 95vw; 
-            max-width: 1100px;
-            -webkit-transform: scale(1.1);
-            transform: scale(1.1);
-            -webkit-transform-origin: center;
-            transform-origin: center;
-        }
-
-        /* Status Dot Styling */
-        #status-dot {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            background-color: #ff0;
-            border-radius: 50%;
-            margin-right: 12px;
-            vertical-align: middle;
-            opacity: 0;
-            transition: opacity 0.1s, background-color 0.3s;
-            box-shadow: 0 0 8px rgba(255, 255, 0, 0.8);
-        }
-        /* State: Active Blink */
+        @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf') format('truetype'); }
+        body { background: black; margin: 0; padding: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #board { width: 95vw; max-width: 1100px; -webkit-transform: scale(1.1); transform: scale(1.1); -webkit-transform-origin: center; transform-origin: center; }
+        
+        /* Status Dot */
+        #status-dot { display: inline-block; width: 10px; height: 10px; background-color: #ff0; border-radius: 50%; margin-right: 12px; vertical-align: middle; opacity: 0; transition: opacity 0.1s; box-shadow: 0 0 8px rgba(255, 255, 0, 0.8); }
         .dot-active { opacity: 1 !important; }
-        /* State: Error/Disconnected */
-        .dot-error { 
-            opacity: 1 !important; 
-            background-color: #f00 !important; 
-            box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; 
-        }
+        .dot-error { opacity: 1 !important; background-color: #f00 !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; }
 
-        #fs-btn {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            width: 30px;
-            height: 30px;
-            background: #1a1a1a;
-            color: #444;
-            border: 1px solid #333;
-            z-index: 1000;
-            font-size: 14px;
-            cursor: pointer;
-            border-radius: 4px;
-            display: block;
-            outline: none;
-        }
-        #fs-btn:hover { color: #888; border-color: #555; }
-
+        /* Fullscreen Button */
+        #fs-btn { position: fixed; top: 15px; right: 15px; width: 30px; height: 30px; background: #1a1a1a; color: #444; border: 1px solid #333; z-index: 1000; font-size: 14px; cursor: pointer; border-radius: 4px; outline: none; }
+        
+        /* Layout Styles */
+        .row-container { width: 100%; margin-bottom: 10px; }
+        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
+        .digit-row { display: flex; width: 100%; justify-content: space-between; }
+        .group-wrap { display: flex; justify-content: center; width: 32%; }
+        .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: inline-block; width: 55px; height: 70px; margin: 0 3px; }
+        .top-digit-wrap { width: 35px; height: 40px; }
+        .clock-colon-wrap { width: 20px; height: 40px; }
+        .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; }
+        .digit { color: #ff0; z-index: 2; font-size: 70px; line-height: 70px; text-shadow: 0 0 8px rgba(255,0,0,0.7); }
+        .digit-bg { color: #080800; z-index: 1; font-size: 70px; line-height: 70px; }
+        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 40px; line-height: 40px; }
+        .clock-colon-wrap .digit { font-size: 35px; line-height: 40px; top: -3px; }
+        .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px; }
+        .label { text-transform: uppercase; font-size: 26px; font-weight: bold; color: #ccc; width: 32%; text-align: center; }
+        .label.inactive { color: #0c0c0c; }
+        
         @media (max-width: 600px) {
             #board { -webkit-transform: scale(1.0); transform: scale(1.0); width: 98vw; }
             .cell { width: 28px !important; height: 40px !important; margin: 0 1px !important; }
             .digit, .digit-bg { font-size: 38px !important; line-height: 40px !important; }
             .label { font-size: 14px !important; }
-            .top-digit-wrap { width: 20px !important; height: 25px !important; }
-            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 22px !important; line-height: 25px !important; }
-            .clock-colon-wrap { width: 10px !important; height: 25px !important; }
-            .clock-colon-wrap .digit { font-size: 20px !important; line-height: 25px !important; }
-            #status-dot { width: 6px; height: 6px; margin-right: 6px; }
         }
-
-        .row-container { width: 100%; margin-bottom: 10px; }
-        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
-        .digit-row { display: flex; width: 100%; justify-content: space-between; }
-        .group-wrap { display: flex; justify-content: center; width: 32%; }
-
-        .cell, .top-digit-wrap, .clock-colon-wrap { 
-            position: relative; 
-            display: inline-block;
-            width: 55px; height: 70px; margin: 0 3px;
-        }
-        
-        .top-digit-wrap { width: 35px; height: 40px; }
-        .clock-colon-wrap { width: 20px; height: 40px; }
-
-        .digit, .digit-bg { 
-            font-family: 'DSEG7'; 
-            position: absolute; 
-            left: 0; width: 100%; text-align: center;
-        }
-        
-        .digit { color: #ff0; z-index: 2; font-size: 70px; line-height: 70px; text-shadow: 0 0 8px rgba(255,0,0,0.7); }
-        .digit-bg { color: #080800; z-index: 1; font-size: 70px; line-height: 70px; }
-        
-        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 40px; line-height: 40px; }
-        .clock-colon-wrap .digit { font-size: 35px; line-height: 40px; top: -3px; }
-
-        .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px; }
-        .label { text-transform: uppercase; font-size: 26px; font-weight: bold; color: #ccc; width: 32%; text-align: center; }
-        .label.inactive { color: #0c0c0c; }
     </style>
 </head>
 <body>
@@ -118,17 +46,16 @@
     <div id="board"></div>
 
     <script>
-        var fsBtn = document.getElementById('fs-btn');
-        var userAgent = navigator.userAgent || "";
-        if (userAgent.indexOf('CrKey') > -1 || userAgent.indexOf('Chromecast') > -1) { fsBtn.style.display = 'none'; }
-
-        fsBtn.onclick = function() {
-            var el = document.documentElement;
-            var requestMethod = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullScreen;
-            if (requestMethod) { requestMethod.call(el); fsBtn.style.display = 'none'; }
-        };
-
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
+        var FAST_SPEED = 5000;
+        var SLOW_SPEED = 30000;
+        var IDLE_TIME = 5 * 60 * 1000; 
+
+        var lastDataHash = "";
+        var lastChangeTimestamp = Date.now();
+        var currentInterval = FAST_SPEED;
+        var pollTimer = null;
+
         var ROWS = [
             [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
             [["Extras", 7],   ["Wickets", 5], ["Overs", 6]],
@@ -136,146 +63,121 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        // POLLING LOGIC
-        var FAST_INTERVAL = 5000;
-        var SLOW_INTERVAL = 30000;
-        var IDLE_LIMIT = 5 * 60 * 1000; // 5 minutes
-        
-        var lastDataString = "";
-        var lastChangeTime = Date.now();
-        var currentInterval = FAST_INTERVAL;
-        var pollTimer = null;
-
         function createDigit(char, isColon, isSmall) {
             var wrap = document.createElement('div');
             wrap.className = isColon ? 'clock-colon-wrap' : (isSmall ? 'top-digit-wrap' : 'cell');
-            var bg = document.createElement('div');
-            bg.className = 'digit-bg';
-            bg.innerHTML = isColon ? ':' : '8';
-            var fg = document.createElement('div');
-            fg.className = 'digit';
-            fg.innerHTML = char;
-            wrap.appendChild(bg);
-            wrap.appendChild(fg);
+            var bg = document.createElement('div'); bg.className = 'digit-bg'; bg.innerHTML = isColon ? ':' : '8';
+            var fg = document.createElement('div'); fg.className = 'digit'; fg.innerHTML = char;
+            wrap.appendChild(bg); wrap.appendChild(fg);
             return wrap;
         }
 
+        // Initialize Board
         var board = document.getElementById('board');
         var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
         for (var i = 0; i < ROWS.length; i++) {
-            var rNum = i + 1;
-            boardHtml += '<div class="row-container">' +
-                        '<div class="label-row">' +
-                            '<div id="lbl-' + rNum + '-0" class="label"></div>' +
-                            '<div id="lbl-' + rNum + '-1" class="label"></div>' +
-                            '<div id="lbl-' + rNum + '-2" class="label"></div>' +
-                        '</div>' +
-                        '<div id="row' + rNum + '" class="digit-row"></div>' +
-                    '</div>';
+            boardHtml += '<div class="row-container"><div class="label-row"><div id="lbl-'+(i+1)+'-0" class="label"></div><div id="lbl-'+(i+1)+'-1" class="label"></div><div id="lbl-'+(i+1)+'-2" class="label"></div></div><div id="row'+(i+1)+'" class="digit-row"></div></div>';
         }
         board.innerHTML = boardHtml;
 
         function updateScore() {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', 'https://api.npoint.io/' + NPOINT_ID + '?t=' + Date.now(), true);
-            
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
                     var dot = document.getElementById('status-dot');
-                    
                     if (xhr.status === 200) {
                         if(dot) dot.classList.remove('dot-error');
+                        var vals = JSON.parse(xhr.responseText);
                         
-                        var rawText = xhr.responseText;
-                        var vals = JSON.parse(rawText);
-                        if (!vals) return;
-
-                        // Check for data changes
-                        if (rawText !== lastDataString) {
-                            lastDataString = rawText;
-                            lastChangeTime = Date.now();
-                            setPollingSpeed(FAST_INTERVAL);
-                        } else {
-                            // If no change, check if we've exceeded idle limit
-                            if (Date.now() - lastChangeTime > IDLE_LIMIT) {
-                                setPollingSpeed(SLOW_INTERVAL);
-                            }
+                        // Compare current values to last values to check for change
+                        var currentHash = JSON.stringify(vals);
+                        if (currentHash !== lastDataHash) {
+                            lastDataHash = currentHash;
+                            lastChangeTimestamp = Date.now();
+                            switchInterval(FAST_SPEED);
+                        } else if (Date.now() - lastChangeTimestamp > IDLE_TIME) {
+                            switchInterval(SLOW_SPEED);
                         }
 
-                        // Render Logic
-                        var r0 = document.getElementById('row0');
-                        r0.innerHTML = '';
-                        var b1 = (vals[0] || "").toString(); while(b1.length < 2) b1 = " " + b1;
-                        var b2 = (vals[1] || "").toString(); while(b2.length < 2) b2 = " " + b2;
+                        renderBoard(vals);
                         
-                        var now = new Date();
-                        var hh = now.getHours().toString().padStart(2, '0');
-                        var mm = now.getMinutes().toString().padStart(2, '0');
-                        var timeStr = (hh + ":" + mm).split('');
-
-                        var makeGroup = function(arr) {
-                            var d = document.createElement('div'); d.style.display = "flex";
-                            for(var k=0; k<arr.length; k++) d.appendChild(createDigit(arr[k], arr[k]===':', true));
-                            return d;
-                        };
-
-                        r0.appendChild(makeGroup(b1.split('')));
-                        r0.appendChild(makeGroup(timeStr));
-                        r0.appendChild(makeGroup(b2.split('')));
-
-                        for (var r = 0; r < ROWS.length; r++) {
-                            var container = document.getElementById('row' + (r + 1));
-                            container.innerHTML = '';
-                            var rowData = ROWS[r];
-                            for (var c = 0; c < rowData.length; c++) {
-                                var gWrap = document.createElement('div'); gWrap.className = 'group-wrap';
-                                var labelText = rowData[c][0];
-                                var value = vals[rowData[c][1]];
-                                var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
-                                
-                                if (labelText === "Wickets") {
-                                    lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
-                                } else { lbl.innerHTML = labelText; }
-                                
-                                var isActive = (value !== null && value !== undefined && value.toString().replace(/\s/g, '') !== "");
-                                lbl.className = isActive ? 'label' : 'label inactive';
-                                
-                                var valStr = (value === null || value === undefined ? "" : value).toString().slice(-3);
-                                while(valStr.length < 3) valStr = " " + valStr;
-                                var chars = valStr.split('');
-                                for (var m = 0; m < chars.length; m++) { gWrap.appendChild(createDigit(chars[m])); }
-                                container.appendChild(gWrap);
-                            }
-                        }
-
-                        // Success Blink
+                        // Blink logic
                         var activeDot = document.getElementById('status-dot');
                         if (activeDot) {
                             activeDot.classList.add('dot-active');
-                            setTimeout(function() { activeDot.classList.remove('dot-active'); }, 250);
+                            setTimeout(function() { activeDot.classList.remove('dot-active'); }, 300);
                         }
                     } else {
-                        // Error State
                         if(dot) dot.classList.add('dot-error');
-                        setPollingSpeed(FAST_INTERVAL); // Try harder to reconnect
+                        switchInterval(FAST_SPEED); // Revert to fast if error occurs to recover quickly
                     }
                 }
             };
             xhr.send();
         }
 
-        function setPollingSpeed(ms) {
+        function renderBoard(vals) {
+            // Row 0 (Top)
+            var r0 = document.getElementById('row0');
+            r0.innerHTML = '';
+            var b1 = (vals[0] || "").toString().padStart(2, ' ');
+            var b2 = (vals[1] || "").toString().padStart(2, ' ');
+            var now = new Date();
+            var timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+
+            var makeGroup = (s, small) => {
+                var d = document.createElement('div'); d.style.display="flex";
+                s.split('').forEach(c => d.appendChild(createDigit(c, c===':', small)));
+                return d;
+            };
+            r0.appendChild(makeGroup(b1, true));
+            r0.appendChild(makeGroup(timeStr, true));
+            r0.appendChild(makeGroup(b2, true));
+
+            // Main Rows
+            for (var r = 0; r < ROWS.length; r++) {
+                var container = document.getElementById('row' + (r + 1));
+                container.innerHTML = '';
+                for (var c = 0; c < 3; c++) {
+                    var gWrap = document.createElement('div'); gWrap.className = 'group-wrap';
+                    var labelText = ROWS[r][c][0];
+                    var val = vals[ROWS[r][c][1]];
+                    var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
+
+                    if (labelText === "Wickets") {
+                        lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
+                    } else { lbl.innerHTML = labelText; }
+
+                    var active = (val !== null && val !== undefined && val.toString().trim() !== "");
+                    lbl.className = active ? 'label' : 'label inactive';
+                    
+                    var valStr = (val || "").toString().slice(-3).padStart(3, ' ');
+                    valStr.split('').forEach(char => gWrap.appendChild(createDigit(char)));
+                    container.appendChild(gWrap);
+                }
+            }
+        }
+
+        function switchInterval(ms) {
             if (currentInterval !== ms) {
                 currentInterval = ms;
                 clearInterval(pollTimer);
                 pollTimer = setInterval(updateScore, currentInterval);
-                console.log("Polling interval changed to: " + ms + "ms");
+                console.log("Switching to " + (ms/1000) + "s polling.");
             }
         }
 
-        // Start initial cycle
-        updateScore();
+        // Start Polling
         pollTimer = setInterval(updateScore, currentInterval);
+        updateScore();
+
+        // Fullscreen Logic
+        document.getElementById('fs-btn').onclick = function() {
+            var el = document.documentElement;
+            (el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullScreen).call(el);
+            this.style.display = 'none';
+        };
     </script>
 </body>
 </html>
