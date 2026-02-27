@@ -30,7 +30,23 @@
             transform-origin: center;
         }
 
-        /* Subtle, dark fullscreen button */
+        /* Status Dot Styling */
+        #status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #ff0;
+            border-radius: 50%;
+            margin-right: 12px;
+            vertical-align: middle;
+            opacity: 0;
+            transition: opacity 0.1s;
+            box-shadow: 0 0 8px rgba(255, 255, 0, 0.8);
+        }
+        .dot-active {
+            opacity: 1 !important;
+        }
+
         #fs-btn {
             position: fixed;
             top: 15px;
@@ -49,7 +65,6 @@
         }
         #fs-btn:hover { color: #888; border-color: #555; }
 
-        /* MOBILE OVERRIDES */
         @media (max-width: 600px) {
             #board {
                 -webkit-transform: scale(1.0);
@@ -63,6 +78,7 @@
             .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 22px !important; line-height: 25px !important; }
             .clock-colon-wrap { width: 10px !important; height: 25px !important; }
             .clock-colon-wrap .digit { font-size: 20px !important; line-height: 25px !important; }
+            #status-dot { width: 6px; height: 6px; margin-right: 6px; }
         }
 
         .row-container { width: 100%; margin-bottom: 10px; }
@@ -104,7 +120,6 @@
         var fsBtn = document.getElementById('fs-btn');
         var userAgent = navigator.userAgent || "";
 
-        // Hide button on Chromecast
         if (userAgent.indexOf('CrKey') > -1 || userAgent.indexOf('Chromecast') > -1) {
             fsBtn.style.display = 'none';
         }
@@ -200,7 +215,13 @@
                             var labelText = rowData[c][0];
                             var value = vals[rowData[c][1]];
                             var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
-                            lbl.innerHTML = labelText;
+                            
+                            // Inject status dot if this is the Wickets label
+                            if (labelText === "Wickets") {
+                                lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
+                            } else {
+                                lbl.innerHTML = labelText;
+                            }
                             
                             var isActive = (value !== null && value !== undefined && value.toString().replace(/\s/g, '') !== "");
                             lbl.className = isActive ? 'label' : 'label inactive';
@@ -214,6 +235,15 @@
                             }
                             container.appendChild(gWrap);
                         }
+                    }
+
+                    // Trigger the status blink
+                    var dot = document.getElementById('status-dot');
+                    if (dot) {
+                        dot.classList.add('dot-active');
+                        setTimeout(function() {
+                            dot.classList.remove('dot-active');
+                        }, 250); 
                     }
                 }
             };
