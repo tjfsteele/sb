@@ -40,11 +40,16 @@
             margin-right: 12px;
             vertical-align: middle;
             opacity: 0;
-            transition: opacity 0.1s;
+            transition: opacity 0.1s, background-color 0.3s;
             box-shadow: 0 0 8px rgba(255, 255, 0, 0.8);
         }
-        .dot-active {
-            opacity: 1 !important;
+        /* State: Active Blink */
+        .dot-active { opacity: 1 !important; }
+        /* State: Error/Disconnected */
+        .dot-error { 
+            opacity: 1 !important; 
+            background-color: #f00 !important; 
+            box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; 
         }
 
         #fs-btn {
@@ -66,11 +71,7 @@
         #fs-btn:hover { color: #888; border-color: #555; }
 
         @media (max-width: 600px) {
-            #board {
-                -webkit-transform: scale(1.0);
-                transform: scale(1.0);
-                width: 98vw;
-            }
+            #board { -webkit-transform: scale(1.0); transform: scale(1.0); width: 98vw; }
             .cell { width: 28px !important; height: 40px !important; margin: 0 1px !important; }
             .digit, .digit-bg { font-size: 38px !important; line-height: 40px !important; }
             .label { font-size: 14px !important; }
@@ -119,18 +120,12 @@
     <script>
         var fsBtn = document.getElementById('fs-btn');
         var userAgent = navigator.userAgent || "";
-
-        if (userAgent.indexOf('CrKey') > -1 || userAgent.indexOf('Chromecast') > -1) {
-            fsBtn.style.display = 'none';
-        }
+        if (userAgent.indexOf('CrKey') > -1 || userAgent.indexOf('Chromecast') > -1) { fsBtn.style.display = 'none'; }
 
         fsBtn.onclick = function() {
             var el = document.documentElement;
             var requestMethod = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullScreen;
-            if (requestMethod) { 
-                requestMethod.call(el);
-                fsBtn.style.display = 'none';
-            }
+            if (requestMethod) { requestMethod.call(el); fsBtn.style.display = 'none'; }
         };
 
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
@@ -140,6 +135,16 @@
             [["1st Inns", 10],["Last Man", 8],["Overs Rem", 12]],
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
+
+        // POLLING LOGIC
+        var FAST_INTERVAL = 5000;
+        var SLOW_INTERVAL = 30000;
+        var IDLE_LIMIT = 5 * 60 * 1000; // 5 minutes
+        
+        var lastDataString = "";
+        var lastChangeTime = Date.now();
+        var currentInterval = FAST_INTERVAL;
+        var pollTimer = null;
 
         function createDigit(char, isColon, isSmall) {
             var wrap = document.createElement('div');
@@ -173,85 +178,104 @@
         function updateScore() {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', 'https://api.npoint.io/' + NPOINT_ID + '?t=' + Date.now(), true);
+            
             xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var vals = JSON.parse(xhr.responseText);
-                    if (!vals) return;
-
-                    var r0 = document.getElementById('row0');
-                    r0.innerHTML = '';
-                    
-                    var b1 = (vals[0] || "").toString();
-                    while(b1.length < 2) b1 = " " + b1;
-                    var b2 = (vals[1] || "").toString();
-                    while(b2.length < 2) b2 = " " + b2;
-
-                    var now = new Date();
-                    var hh = now.getHours().toString();
-                    var mm = now.getMinutes().toString();
-                    if(hh.length < 2) hh = "0" + hh;
-                    if(mm.length < 2) mm = "0" + mm;
-                    var timeStr = (hh + ":" + mm).split('');
-
-                    var makeGroup = function(arr) {
-                        var d = document.createElement('div');
-                        d.style.display = "flex";
-                        for(var k=0; k<arr.length; k++) d.appendChild(createDigit(arr[k], arr[k]===':', true));
-                        return d;
-                    };
-
-                    r0.appendChild(makeGroup(b1.split('')));
-                    r0.appendChild(makeGroup(timeStr));
-                    r0.appendChild(makeGroup(b2.split('')));
-
-                    for (var r = 0; r < ROWS.length; r++) {
-                        var container = document.getElementById('row' + (r + 1));
-                        container.innerHTML = '';
-                        var rowData = ROWS[r];
-
-                        for (var c = 0; c < rowData.length; c++) {
-                            var gWrap = document.createElement('div');
-                            gWrap.className = 'group-wrap';
-                            var labelText = rowData[c][0];
-                            var value = vals[rowData[c][1]];
-                            var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
-                            
-                            // Inject status dot if this is the Wickets label
-                            if (labelText === "Wickets") {
-                                lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
-                            } else {
-                                lbl.innerHTML = labelText;
-                            }
-                            
-                            var isActive = (value !== null && value !== undefined && value.toString().replace(/\s/g, '') !== "");
-                            lbl.className = isActive ? 'label' : 'label inactive';
-                            
-                            var valStr = (value === null || value === undefined ? "" : value).toString().slice(-3);
-                            while(valStr.length < 3) valStr = " " + valStr;
-                            var chars = valStr.split('');
-
-                            for (var m = 0; m < chars.length; m++) {
-                                gWrap.appendChild(createDigit(chars[m]));
-                            }
-                            container.appendChild(gWrap);
-                        }
-                    }
-
-                    // Trigger the status blink
+                if (xhr.readyState === 4) {
                     var dot = document.getElementById('status-dot');
-                    if (dot) {
-                        dot.classList.add('dot-active');
-                        setTimeout(function() {
-                            dot.classList.remove('dot-active');
-                        }, 250); 
+                    
+                    if (xhr.status === 200) {
+                        if(dot) dot.classList.remove('dot-error');
+                        
+                        var rawText = xhr.responseText;
+                        var vals = JSON.parse(rawText);
+                        if (!vals) return;
+
+                        // Check for data changes
+                        if (rawText !== lastDataString) {
+                            lastDataString = rawText;
+                            lastChangeTime = Date.now();
+                            setPollingSpeed(FAST_INTERVAL);
+                        } else {
+                            // If no change, check if we've exceeded idle limit
+                            if (Date.now() - lastChangeTime > IDLE_LIMIT) {
+                                setPollingSpeed(SLOW_INTERVAL);
+                            }
+                        }
+
+                        // Render Logic
+                        var r0 = document.getElementById('row0');
+                        r0.innerHTML = '';
+                        var b1 = (vals[0] || "").toString(); while(b1.length < 2) b1 = " " + b1;
+                        var b2 = (vals[1] || "").toString(); while(b2.length < 2) b2 = " " + b2;
+                        
+                        var now = new Date();
+                        var hh = now.getHours().toString().padStart(2, '0');
+                        var mm = now.getMinutes().toString().padStart(2, '0');
+                        var timeStr = (hh + ":" + mm).split('');
+
+                        var makeGroup = function(arr) {
+                            var d = document.createElement('div'); d.style.display = "flex";
+                            for(var k=0; k<arr.length; k++) d.appendChild(createDigit(arr[k], arr[k]===':', true));
+                            return d;
+                        };
+
+                        r0.appendChild(makeGroup(b1.split('')));
+                        r0.appendChild(makeGroup(timeStr));
+                        r0.appendChild(makeGroup(b2.split('')));
+
+                        for (var r = 0; r < ROWS.length; r++) {
+                            var container = document.getElementById('row' + (r + 1));
+                            container.innerHTML = '';
+                            var rowData = ROWS[r];
+                            for (var c = 0; c < rowData.length; c++) {
+                                var gWrap = document.createElement('div'); gWrap.className = 'group-wrap';
+                                var labelText = rowData[c][0];
+                                var value = vals[rowData[c][1]];
+                                var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
+                                
+                                if (labelText === "Wickets") {
+                                    lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
+                                } else { lbl.innerHTML = labelText; }
+                                
+                                var isActive = (value !== null && value !== undefined && value.toString().replace(/\s/g, '') !== "");
+                                lbl.className = isActive ? 'label' : 'label inactive';
+                                
+                                var valStr = (value === null || value === undefined ? "" : value).toString().slice(-3);
+                                while(valStr.length < 3) valStr = " " + valStr;
+                                var chars = valStr.split('');
+                                for (var m = 0; m < chars.length; m++) { gWrap.appendChild(createDigit(chars[m])); }
+                                container.appendChild(gWrap);
+                            }
+                        }
+
+                        // Success Blink
+                        var activeDot = document.getElementById('status-dot');
+                        if (activeDot) {
+                            activeDot.classList.add('dot-active');
+                            setTimeout(function() { activeDot.classList.remove('dot-active'); }, 250);
+                        }
+                    } else {
+                        // Error State
+                        if(dot) dot.classList.add('dot-error');
+                        setPollingSpeed(FAST_INTERVAL); // Try harder to reconnect
                     }
                 }
             };
             xhr.send();
         }
 
-        setInterval(updateScore, 5000);
+        function setPollingSpeed(ms) {
+            if (currentInterval !== ms) {
+                currentInterval = ms;
+                clearInterval(pollTimer);
+                pollTimer = setInterval(updateScore, currentInterval);
+                console.log("Polling interval changed to: " + ms + "ms");
+            }
+        }
+
+        // Start initial cycle
         updateScore();
+        pollTimer = setInterval(updateScore, currentInterval);
     </script>
 </body>
 </html>
