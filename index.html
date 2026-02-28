@@ -103,10 +103,42 @@
         .label.inactive { color: #111; }
         
         @media (max-width: 600px) {
-            #board { transform: scale(1.0); width: 98vw; }
-            .cell { width: 28px !important; height: 40px !important; margin: 0 2px !important; }
-            .digit, .digit-bg { font-size: 38px !important; line-height: 40px !important; }
-            .label { font-size: 14px !important; }
+            #board { 
+                transform: scale(1.0); 
+                width: 98vw; 
+            }
+            
+            /* Standard digits in the main grid */
+            .cell { 
+                width: 22px !important; 
+                height: 35px !important; 
+                margin: 0 1px !important; 
+            }
+            
+            /* Top row digits - smaller to prevent overflow */
+            .top-digit-wrap { 
+                width: 15px !important; 
+                height: 25px !important; 
+                margin: 0 1px !important; 
+            }
+        
+            /* Adjust font sizes for mobile */
+            .digit, .digit-bg { 
+                font-size: 32px !important; 
+                line-height: 35px !important; 
+            }
+        
+            /* Specifically shrink the top row font */
+            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { 
+                font-size: 20px !important; 
+                line-height: 25px !important; 
+            }
+        
+            /* Colon adjustment */
+            .clock-colon-wrap { width: 10px !important; }
+            .clock-colon-wrap .digit { font-size: 18px !important; }
+        
+            .label { font-size: 12px !important; }
         }
     </style>
 </head>
