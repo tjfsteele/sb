@@ -24,7 +24,6 @@
     
         #board { 
             width: 98vw; 
-            /* Constraint height to prevent vertical overflow on tablets */
             max-height: 96vh; 
             display: block;
         }
@@ -51,7 +50,6 @@
             opacity: 0.6;
         }
         
-        /* Using vh (viewport height) to ensure scaling on large laptop screens */
         .row-container { width: 100%; margin-bottom: 1.5vh; } 
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
@@ -93,7 +91,6 @@
     
         .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.2vh; }
         .label { 
-            /* Significantly larger font size for high-res laptop screens */
             font-size: 5vh; 
             font-weight: 900;
             text-transform: uppercase;
@@ -108,9 +105,16 @@
         
         /* Mobile Specific Overrides */
         @media (max-width: 600px) {
+            #board { width: 100vw; }
+            /* Force the top row to stay within screen bounds */
+            .top-row-grid { width: 95vw; margin: 0 auto 10px auto; }
             .label { font-size: 16px !important; letter-spacing: 0.5px !important; }
             .digit, .digit-bg { font-size: 32px !important; line-height: 32px !important; }
-            .cell { height: 32px !important; width: 22px !important; }
+            .cell { height: 32px !important; width: 22px !important; margin: 0 1px !important; }
+            .top-digit-wrap { height: 22px !important; width: 15px !important; margin: 0 1px !important; }
+            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 20px !important; line-height: 22px !important; }
+            .clock-colon-wrap { width: 8px !important; }
+            .clock-colon-wrap .digit { font-size: 18px !important; line-height: 22px !important; }
         }
     </style>
 </head>
@@ -119,7 +123,6 @@
     <div id="board"></div>
 
     <script>
-        // ES5 Syntax for Chromecast 1 compatibility
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
         var FAST_SPEED = 5000;
         var SLOW_SPEED = 30000;
@@ -137,7 +140,7 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        // Polyfill for padStart for older Chromecast browsers
+        // ES5 Polyfill for padStart
         if (!String.prototype.padStart) {
             String.prototype.padStart = function padStart(targetLength, padString) {
                 targetLength = targetLength >> 0;
