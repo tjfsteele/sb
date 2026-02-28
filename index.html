@@ -91,7 +91,7 @@
     
         .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px; }
         .label { 
-            font-size: 52px; /* Increased for better visibility */
+            font-size: 38px; /* Large for Laptop/Desktop */
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -102,7 +102,6 @@
         }
         .label.inactive { color: #111; }
         
-        /* Tablet Landscape Adjustments */
         @media (max-height: 800px) {
             .row-container, .top-row-grid { margin-bottom: 10px; }
             .label { font-size: 24px; }
@@ -110,7 +109,6 @@
             .digit, .digit-bg { font-size: 60px; line-height: 60px; }
         }
 
-        /* Mobile Adjustments */
         @media (max-width: 600px) {
             #board { width: 100vw; }
             .row-container { margin-bottom: 10px; }
