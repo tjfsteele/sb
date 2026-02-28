@@ -110,52 +110,60 @@
         @media (max-width: 600px) {
             #board { 
                 transform: scale(1.0); 
-                width: 100vw; 
+                width: 98vw; 
             }
             
-            /* Slightly narrower digits to make room for larger text */
+            /* Standard digits */
             .cell { 
                 width: 22px !important; 
-                height: 32px !important; 
+                height: 35px !important; 
                 margin: 0 1px !important; 
             }
             
-            /* Top row digits (Batter/Time) */
+            /* Top row digits */
             .top-digit-wrap { 
                 width: 15px !important; 
-                height: 22px !important; 
+                height: 25px !important; 
                 margin: 0 1px !important; 
             }
         
-            /* Main digit sizing */
             .digit, .digit-bg { 
-                font-size: 32px !important; 
-                line-height: 32px !important; 
+                font-size: 34px !important; 
+                line-height: 35px !important; 
             }
         
             .top-digit-wrap .digit, .top-digit-wrap .digit-bg { 
-                font-size: 20px !important; 
-                line-height: 22px !important; 
+                font-size: 22px !important; 
+                line-height: 25px !important; 
             }
         
-            /* THE FIX: Bold, All-Caps, Large Labels */
+            /* FIXED LABELS: Bold, All-Caps, and Centered */
             .label { 
-                font-size: 18px !important; /* Balanced for 3-across layout */
+                font-size: 16px !important; 
                 font-family: Arial, sans-serif !important;
-                font-weight: 800 !important;
+                font-weight: 900 !important;
                 text-transform: uppercase !important; 
-                color: #BBBBBB !important; /* Light grey for high contrast */
+                color: #CCC !important;
                 width: 32% !important;
-                letter-spacing: 0.5px;
-                margin-bottom: 4px !important;
+                text-align: center !important; /* Centers label over the 3 digits */
+                display: block !important;
+                margin-bottom: 2px !important;
+                letter-spacing: 0px !important;
             }
         
             .label.inactive { 
-                color: #151515 !important; 
+                color: #111 !important; 
             }
         
-            .clock-colon-wrap { width: 8px !important; }
-            .clock-colon-wrap .digit { font-size: 18px !important; line-height: 22px !important; }
+            .clock-colon-wrap { width: 10px !important; }
+            .clock-colon-wrap .digit { font-size: 20px !important; line-height: 25px !important; }
+
+            /* Fix for the Wickets dot alignment on mobile */
+            #status-dot {
+                width: 8px;
+                height: 8px;
+                margin-right: 4px;
+            }
         }
     </style>
 </head>
