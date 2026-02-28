@@ -1,41 +1,110 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cricket Scoreboard</title>
+    <title>Cricket Scoreboard - High Vis</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        @font-face { font-family: 'DSEG7'; src: url('DSEG7.ttf') format('truetype'); }
-        body { background: black; margin: 0; padding: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #board { width: 95vw; max-width: 1100px; -webkit-transform: scale(1.1); transform: scale(1.1); -webkit-transform-origin: center; transform-origin: center; }
+        @font-face { 
+            font-family: 'DSEG7'; 
+            src: url('DSEG7.ttf') format('truetype'); 
+        }
         
-        /* Status Dot */
-        #status-dot { display: inline-block; width: 10px; height: 10px; background-color: #ff0; border-radius: 50%; margin-right: 12px; vertical-align: middle; opacity: 0; transition: opacity 0.1s; box-shadow: 0 0 8px rgba(255, 255, 0, 0.8); }
+        body { 
+            background: #000; 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, sans-serif; 
+            color: white; 
+            overflow: hidden; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+        }
+
+        #board { 
+            width: 95vw; 
+            max-width: 1100px; 
+            transform: scale(1.1); 
+            transform-origin: center; 
+        }
+        
+        /* Status Dot - Green to match */
+        #status-dot { 
+            display: inline-block; 
+            width: 10px; 
+            height: 10px; 
+            background-color: #0f0; 
+            border-radius: 50%; 
+            margin-right: 12px; 
+            vertical-align: middle; 
+            opacity: 0; 
+            transition: opacity 0.1s; 
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.8); 
+        }
         .dot-active { opacity: 1 !important; }
         .dot-error { opacity: 1 !important; background-color: #f00 !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; }
 
-        /* Fullscreen Button */
-        #fs-btn { position: fixed; top: 15px; right: 15px; width: 30px; height: 30px; background: #1a1a1a; color: #444; border: 1px solid #333; z-index: 1000; font-size: 14px; cursor: pointer; border-radius: 4px; outline: none; }
+        #fs-btn { 
+            position: fixed; top: 15px; right: 15px; width: 30px; height: 30px; 
+            background: #1a1a1a; color: #444; border: 1px solid #333; 
+            z-index: 1000; font-size: 14px; cursor: pointer; border-radius: 4px; 
+        }
         
-        /* Layout Styles */
-        .row-container { width: 100%; margin-bottom: 10px; }
+        .row-container { width: 100%; margin-bottom: 15px; }
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         .group-wrap { display: flex; justify-content: center; width: 32%; }
-        .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: inline-block; width: 55px; height: 70px; margin: 0 3px; }
+        
+        /* Increased margin slightly for better separation at distance */
+        .cell, .top-digit-wrap, .clock-colon-wrap { 
+            position: relative; 
+            display: inline-block; 
+            width: 55px; 
+            height: 70px; 
+            margin: 0 5px; 
+        }
+        
         .top-digit-wrap { width: 35px; height: 40px; }
         .clock-colon-wrap { width: 20px; height: 40px; }
-        .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; }
-        .digit { color: #ff0; z-index: 2; font-size: 70px; line-height: 70px; text-shadow: 0 0 8px rgba(255,0,0,0.7); }
-        .digit-bg { color: #080800; z-index: 1; font-size: 70px; line-height: 70px; }
+
+        .digit, .digit-bg { 
+            font-family: 'DSEG7'; 
+            position: absolute; 
+            left: 0; 
+            width: 100%; 
+            text-align: center; 
+        }
+
+        /* High Visibility Green Styling */
+        .digit { 
+            color: #00ff00; 
+            z-index: 2; 
+            font-size: 70px; 
+            line-height: 70px; 
+            /* Sharp green glow without the red bleed */
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5), 0 0 2px rgba(255, 255, 255, 0.2); 
+            filter: brightness(1.1);
+        }
+
+        /* Low-opacity background segments for contrast */
+        .digit-bg { 
+            color: rgba(0, 40, 0, 0.9); 
+            z-index: 1; 
+            font-size: 70px; 
+            line-height: 70px; 
+        }
+
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 40px; line-height: 40px; }
-        .clock-colon-wrap .digit { font-size: 35px; line-height: 40px; top: -3px; }
+        .clock-colon-wrap .digit { font-size: 35px; line-height: 40px; top: -3px; text-shadow: none; }
+
         .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px; }
-        .label { text-transform: uppercase; font-size: 26px; font-weight: bold; color: #ccc; width: 32%; text-align: center; }
-        .label.inactive { color: #0c0c0c; }
+        .label { text-transform: uppercase; font-size: 26px; font-weight: bold; color: #999; width: 32%; text-align: center; }
+        .label.inactive { color: #111; }
         
         @media (max-width: 600px) {
-            #board { -webkit-transform: scale(1.0); transform: scale(1.0); width: 98vw; }
-            .cell { width: 28px !important; height: 40px !important; margin: 0 1px !important; }
+            #board { transform: scale(1.0); width: 98vw; }
+            .cell { width: 28px !important; height: 40px !important; margin: 0 2px !important; }
             .digit, .digit-bg { font-size: 38px !important; line-height: 40px !important; }
             .label { font-size: 14px !important; }
         }
@@ -72,7 +141,6 @@
             return wrap;
         }
 
-        // Initialize Board
         var board = document.getElementById('board');
         var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
         for (var i = 0; i < ROWS.length; i++) {
@@ -89,8 +157,6 @@
                     if (xhr.status === 200) {
                         if(dot) dot.classList.remove('dot-error');
                         var vals = JSON.parse(xhr.responseText);
-                        
-                        // Compare current values to last values to check for change
                         var currentHash = JSON.stringify(vals);
                         if (currentHash !== lastDataHash) {
                             lastDataHash = currentHash;
@@ -99,10 +165,7 @@
                         } else if (Date.now() - lastChangeTimestamp > IDLE_TIME) {
                             switchInterval(SLOW_SPEED);
                         }
-
                         renderBoard(vals);
-                        
-                        // Blink logic
                         var activeDot = document.getElementById('status-dot');
                         if (activeDot) {
                             activeDot.classList.add('dot-active');
@@ -110,7 +173,7 @@
                         }
                     } else {
                         if(dot) dot.classList.add('dot-error');
-                        switchInterval(FAST_SPEED); // Revert to fast if error occurs to recover quickly
+                        switchInterval(FAST_SPEED);
                     }
                 }
             };
@@ -118,7 +181,6 @@
         }
 
         function renderBoard(vals) {
-            // Row 0 (Top)
             var r0 = document.getElementById('row0');
             r0.innerHTML = '';
             var b1 = (vals[0] || "").toString().padStart(2, ' ');
@@ -135,7 +197,6 @@
             r0.appendChild(makeGroup(timeStr, true));
             r0.appendChild(makeGroup(b2, true));
 
-            // Main Rows
             for (var r = 0; r < ROWS.length; r++) {
                 var container = document.getElementById('row' + (r + 1));
                 container.innerHTML = '';
@@ -164,18 +225,16 @@
                 currentInterval = ms;
                 clearInterval(pollTimer);
                 pollTimer = setInterval(updateScore, currentInterval);
-                console.log("Switching to " + (ms/1000) + "s polling.");
             }
         }
 
-        // Start Polling
         pollTimer = setInterval(updateScore, currentInterval);
         updateScore();
 
-        // Fullscreen Logic
         document.getElementById('fs-btn').onclick = function() {
             var el = document.documentElement;
-            (el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullScreen).call(el);
+            var rfs = el.requestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+            rfs.call(el);
             this.style.display = 'none';
         };
     </script>
