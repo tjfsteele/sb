@@ -25,7 +25,6 @@
         #board { 
             width: 95vw; 
             max-width: 1100px;
-            /* Scale based on height to prevent vertical overflow on tablets/TVs */
             max-height: 95vh; 
             display: block;
         }
@@ -45,13 +44,24 @@
         .dot-active { opacity: 1 !important; }
         .dot-error { opacity: 1 !important; background-color: #f00 !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; }
     
+        /* Fullscreen button moved to bottom right */
         #fs-btn { 
-            position: fixed; top: 15px; right: 15px; width: 30px; height: 30px; 
-            background: #1a1a1a; color: #444; border: 1px solid #333; 
-            z-index: 1000; font-size: 14px; cursor: pointer; border-radius: 4px; 
+            position: fixed; 
+            bottom: 15px; 
+            right: 15px; 
+            width: 35px; 
+            height: 35px; 
+            background: #1a1a1a; 
+            color: #555; 
+            border: 1px solid #333; 
+            z-index: 1000; 
+            font-size: 16px; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            opacity: 0.6;
         }
+        #fs-btn:hover { opacity: 1; color: #888; }
         
-        /* Reduced vertical margins for landscape tablet/TV fit */
         .row-container { width: 100%; margin-bottom: 15px; } 
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
@@ -108,7 +118,6 @@
         }
         .label.inactive { color: #111; }
         
-        /* Landscape fixes for shorter screens (Tablets/TV) */
         @media (max-height: 800px) {
             .row-container, .top-row-grid { margin-bottom: 8px; }
             .label { font-size: 20px; }
@@ -131,11 +140,10 @@
     </style>
 </head>
 <body>
-    <button id="fs-btn">[ ]</button>
+    <button id="fs-btn">⛶</button>
     <div id="board"></div>
 
     <script>
-        // Use var and function() for 1st Gen Chromecast compatibility
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
         var FAST_SPEED = 5000;
         var SLOW_SPEED = 30000;
@@ -153,7 +161,7 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        // Traditional polyfill for padStart for very old browsers
+        // Polyfill for padStart for older browsers
         if (!String.prototype.padStart) {
             String.prototype.padStart = function padStart(targetLength, padString) {
                 targetLength = targetLength >> 0;
