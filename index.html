@@ -23,10 +23,8 @@
         }
     
         #board { 
-            /* Fill most of the horizontal screen on laptops */
             width: 98vw; 
-            /* Maintain vertical safety for tablets/Chromecast */
-            max-height: 95vh; 
+            max-height: 96vh; 
             display: block;
         }
         
@@ -46,31 +44,21 @@
         .dot-error { opacity: 1 !important; background-color: #f00 !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; }
     
         #fs-btn { 
-            position: fixed; 
-            bottom: 15px; 
-            right: 15px; 
-            width: 35px; 
-            height: 35px; 
-            background: #1a1a1a; 
-            color: #555; 
-            border: 1px solid #333; 
-            z-index: 1000; 
-            font-size: 16px; 
-            cursor: pointer; 
-            border-radius: 4px; 
+            position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; 
+            background: #1a1a1a; color: #555; border: 1px solid #333; 
+            z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; 
             opacity: 0.6;
         }
-        #fs-btn:hover { opacity: 1; color: #888; }
         
-        .row-container { width: 100%; margin-bottom: 15px; } 
-        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
+        .row-container { width: 100%; margin-bottom: 20px; } 
+        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         .group-wrap { display: flex; justify-content: center; width: 32%; }
         
         .cell, .top-digit-wrap, .clock-colon-wrap { 
             position: relative; 
             display: inline-block; 
-            width: 5.5vw; /* Scale width relative to screen width */
+            width: 5.5vw; 
             max-width: 55px;
             height: 70px; 
             margin: 0 0.5vw; 
@@ -96,19 +84,14 @@
             filter: brightness(1.1);
         }
     
-        .digit-bg { 
-            color: #000a00;
-            z-index: 1; 
-            font-size: 70px; 
-            line-height: 70px; 
-        }
+        .digit-bg { color: #000a00; z-index: 1; font-size: 70px; line-height: 70px; }
     
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 45px; line-height: 45px; }
         .clock-colon-wrap .digit { font-size: 40px; line-height: 45px; top: -3px; }
     
         .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px; }
         .label { 
-            font-size: 24px; 
+            font-size: 36px; /* Increased for better visibility */
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -119,13 +102,15 @@
         }
         .label.inactive { color: #111; }
         
+        /* Tablet Landscape Adjustments */
         @media (max-height: 800px) {
-            .row-container, .top-row-grid { margin-bottom: 8px; }
-            .label { font-size: 20px; }
+            .row-container, .top-row-grid { margin-bottom: 10px; }
+            .label { font-size: 24px; }
             .cell { height: 60px; }
             .digit, .digit-bg { font-size: 60px; line-height: 60px; }
         }
 
+        /* Mobile Adjustments */
         @media (max-width: 600px) {
             #board { width: 100vw; }
             .row-container { margin-bottom: 10px; }
@@ -162,6 +147,7 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
+        // PadStart Polyfill for 1st Gen Chromecast
         if (!String.prototype.padStart) {
             String.prototype.padStart = function padStart(targetLength, padString) {
                 targetLength = targetLength >> 0;
@@ -257,8 +243,7 @@
                     var gWrap = document.createElement('div'); gWrap.className = 'group-wrap';
                     var labelText = ROWS[r][c][0];
                     var val = vals[ROWS[r][c][1]];
-                    var lblId = 'lbl-' + (r+1) + '-' + c;
-                    var lbl = document.getElementById(lblId);
+                    var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
 
                     if (labelText === "Wickets") {
                         lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
