@@ -21,7 +21,7 @@
             align-items: center; 
             height: 100vh; 
         }
-
+    
         #board { 
             width: 95vw; 
             max-width: 1100px; 
@@ -29,11 +29,10 @@
             transform-origin: center; 
         }
         
-        /* Status Dot - Green to match */
         #status-dot { 
             display: inline-block; 
-            width: 10px; 
-            height: 10px; 
+            width: 14px; /* Slightly larger for desktop */
+            height: 14px; 
             background-color: #0f0; 
             border-radius: 50%; 
             margin-right: 12px; 
@@ -44,19 +43,18 @@
         }
         .dot-active { opacity: 1 !important; }
         .dot-error { opacity: 1 !important; background-color: #f00 !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; }
-
+    
         #fs-btn { 
             position: fixed; top: 15px; right: 15px; width: 30px; height: 30px; 
             background: #1a1a1a; color: #444; border: 1px solid #333; 
             z-index: 1000; font-size: 14px; cursor: pointer; border-radius: 4px; 
         }
         
-        .row-container { width: 100%; margin-bottom: 15px; }
-        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
+        .row-container { width: 100%; margin-bottom: 25px; } /* More gap on desktop */
+        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 25px; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         .group-wrap { display: flex; justify-content: center; width: 32%; }
         
-        /* Increased margin slightly for better separation at distance */
         .cell, .top-digit-wrap, .clock-colon-wrap { 
             position: relative; 
             display: inline-block; 
@@ -65,9 +63,9 @@
             margin: 0 5px; 
         }
         
-        .top-digit-wrap { width: 35px; height: 40px; }
-        .clock-colon-wrap { width: 20px; height: 40px; }
-
+        .top-digit-wrap { width: 35px; height: 45px; }
+        .clock-colon-wrap { width: 20px; height: 45px; }
+    
         .digit, .digit-bg { 
             font-family: 'DSEG7'; 
             position: absolute; 
@@ -75,95 +73,58 @@
             width: 100%; 
             text-align: center; 
         }
-
-        /* High Visibility Green Styling */
+    
         .digit { 
             color: #00ff00; 
             z-index: 2; 
             font-size: 70px; 
             line-height: 70px; 
-            /* Sharp green glow without the red bleed */
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5), 0 0 2px rgba(255, 255, 255, 0.2); 
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5); 
             filter: brightness(1.1);
         }
-
-        /* Low-opacity background segments for contrast */
+    
         .digit-bg { 
-            color: #000400;
+            color: #001a00;
             z-index: 1; 
             font-size: 70px; 
             line-height: 70px; 
         }
-
-        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 40px; line-height: 40px; }
-        .clock-colon-wrap .digit { font-size: 35px; line-height: 40px; top: -3px; text-shadow: none; }
-
-        .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px; }
+    
+        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 45px; line-height: 45px; }
+        .clock-colon-wrap .digit { font-size: 40px; line-height: 45px; top: -3px; }
+    
+        /* GLOBAL LABELS (Fixed for Laptop/Desktop) */
+        .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px; }
         .label { 
-            font-size: 18px !important; /* Increased from 12px */
-            letter-spacing: 1px;
-            color: #bbb !important; /* Slightly brighter for visibility */
-            margin-bottom: 5px; 
+            font-size: 28px; /* Large for Desktop */
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #CCC;
+            width: 33%;
+            text-align: center;
+            display: block;
         }
         .label.inactive { color: #111; }
         
+        /* MOBILE OVERRIDES */
         @media (max-width: 600px) {
-            #board { 
-                transform: scale(1.0); 
-                width: 98vw; 
-            }
+            #board { transform: scale(1.0); width: 100vw; }
+            .row-container { margin-bottom: 10px; }
+            .cell { width: 22px !important; height: 32px !important; margin: 0 1px !important; }
+            .top-digit-wrap { width: 15px !important; height: 22px !important; margin: 0 1px !important; }
+            .digit, .digit-bg { font-size: 32px !important; line-height: 32px !important; }
+            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 20px !important; line-height: 22px !important; }
             
-            /* Standard digits */
-            .cell { 
-                width: 22px !important; 
-                height: 35px !important; 
-                margin: 0 1px !important; 
-            }
-            
-            /* Top row digits */
-            .top-digit-wrap { 
-                width: 15px !important; 
-                height: 25px !important; 
-                margin: 0 1px !important; 
-            }
-        
-            .digit, .digit-bg { 
-                font-size: 34px !important; 
-                line-height: 35px !important; 
-            }
-        
-            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { 
-                font-size: 22px !important; 
-                line-height: 25px !important; 
-            }
-        
-            /* FIXED LABELS: Bold, All-Caps, and Centered */
+            /* Scaled down for mobile screen width */
             .label { 
                 font-size: 16px !important; 
-                font-family: Arial, sans-serif !important;
-                font-weight: 900 !important;
-                text-transform: uppercase !important; 
-                color: #CCC !important;
-                width: 32% !important;
-                text-align: center !important; /* Centers label over the 3 digits */
-                display: block !important;
-                margin-bottom: 2px !important;
-                letter-spacing: 0px !important;
+                letter-spacing: 0.5px !important;
+                margin-bottom: 3px !important;
             }
-        
-            .label.inactive { 
-                color: #111 !important; 
-            }
-        
-            .clock-colon-wrap { width: 10px !important; }
-            .clock-colon-wrap .digit { font-size: 20px !important; line-height: 25px !important; }
-
-            /* Fix for the Wickets dot alignment on mobile */
-            #status-dot {
-                width: 8px;
-                height: 8px;
-                margin-right: 4px;
-            }
+            #status-dot { width: 8px; height: 8px; margin-right: 4px; }
+            .clock-colon-wrap { width: 8px !important; }
+            .clock-colon-wrap .digit { font-size: 18px !important; line-height: 22px !important; }
         }
     </style>
 </head>
