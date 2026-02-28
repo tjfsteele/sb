@@ -24,14 +24,15 @@
     
         #board { 
             width: 95vw; 
-            max-width: 1100px; 
-            transform: scale(1.1); 
-            transform-origin: center; 
+            max-width: 1100px;
+            /* Scale based on height to prevent vertical overflow on tablets/TVs */
+            max-height: 95vh; 
+            display: block;
         }
         
         #status-dot { 
             display: inline-block; 
-            width: 14px; /* Slightly larger for desktop */
+            width: 14px; 
             height: 14px; 
             background-color: #0f0; 
             border-radius: 50%; 
@@ -50,8 +51,9 @@
             z-index: 1000; font-size: 14px; cursor: pointer; border-radius: 4px; 
         }
         
-        .row-container { width: 100%; margin-bottom: 25px; } /* More gap on desktop */
-        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 25px; }
+        /* Reduced vertical margins for landscape tablet/TV fit */
+        .row-container { width: 100%; margin-bottom: 15px; } 
+        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         .group-wrap { display: flex; justify-content: center; width: 32%; }
         
@@ -93,10 +95,9 @@
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 45px; line-height: 45px; }
         .clock-colon-wrap .digit { font-size: 40px; line-height: 45px; top: -3px; }
     
-        /* GLOBAL LABELS (Fixed for Laptop/Desktop) */
         .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px; }
         .label { 
-            font-size: 28px; /* Large for Desktop */
+            font-size: 24px; 
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -107,21 +108,22 @@
         }
         .label.inactive { color: #111; }
         
-        /* MOBILE OVERRIDES */
+        /* Landscape fixes for shorter screens (Tablets/TV) */
+        @media (max-height: 800px) {
+            .row-container, .top-row-grid { margin-bottom: 8px; }
+            .label { font-size: 20px; }
+            .cell { height: 60px; width: 48px; }
+            .digit, .digit-bg { font-size: 60px; line-height: 60px; }
+        }
+
         @media (max-width: 600px) {
-            #board { transform: scale(1.0); width: 100vw; }
+            #board { width: 100vw; }
             .row-container { margin-bottom: 10px; }
             .cell { width: 22px !important; height: 32px !important; margin: 0 1px !important; }
             .top-digit-wrap { width: 15px !important; height: 22px !important; margin: 0 1px !important; }
             .digit, .digit-bg { font-size: 32px !important; line-height: 32px !important; }
             .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 20px !important; line-height: 22px !important; }
-            
-            /* Scaled down for mobile screen width */
-            .label { 
-                font-size: 16px !important; 
-                letter-spacing: 0.5px !important;
-                margin-bottom: 3px !important;
-            }
+            .label { font-size: 16px !important; letter-spacing: 0.5px !important; margin-bottom: 3px !important; }
             #status-dot { width: 8px; height: 8px; margin-right: 4px; }
             .clock-colon-wrap { width: 8px !important; }
             .clock-colon-wrap .digit { font-size: 18px !important; line-height: 22px !important; }
@@ -133,6 +135,7 @@
     <div id="board"></div>
 
     <script>
+        // Use var and function() for 1st Gen Chromecast compatibility
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
         var FAST_SPEED = 5000;
         var SLOW_SPEED = 30000;
@@ -149,6 +152,22 @@
             [["1st Inns", 10],["Last Man", 8],["Overs Rem", 12]],
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
+
+        // Traditional polyfill for padStart for very old browsers
+        if (!String.prototype.padStart) {
+            String.prototype.padStart = function padStart(targetLength, padString) {
+                targetLength = targetLength >> 0;
+                padString = String(typeof padString !== 'undefined' ? padString : ' ');
+                if (this.length > targetLength) { return String(this); }
+                else {
+                    targetLength = targetLength - this.length;
+                    if (targetLength > padString.length) {
+                        padString += padString.repeat(targetLength / padString.length);
+                    }
+                    return padString.slice(0, targetLength) + String(this);
+                }
+            };
+        }
 
         function createDigit(char, isColon, isSmall) {
             var wrap = document.createElement('div');
@@ -198,19 +217,27 @@
             xhr.send();
         }
 
+        function makeGroup(s, small) {
+            var d = document.createElement('div'); 
+            d.style.display="flex";
+            var chars = s.split('');
+            for (var i = 0; i < chars.length; i++) {
+                var c = chars[i];
+                d.appendChild(createDigit(c, c===':', small));
+            }
+            return d;
+        }
+
         function renderBoard(vals) {
             var r0 = document.getElementById('row0');
             r0.innerHTML = '';
             var b1 = (vals[0] || "").toString().padStart(2, ' ');
             var b2 = (vals[1] || "").toString().padStart(2, ' ');
             var now = new Date();
-            var timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            var hours = now.getHours().toString().padStart(2, '0');
+            var mins = now.getMinutes().toString().padStart(2, '0');
+            var timeStr = hours + ":" + mins;
 
-            var makeGroup = (s, small) => {
-                var d = document.createElement('div'); d.style.display="flex";
-                s.split('').forEach(c => d.appendChild(createDigit(c, c===':', small)));
-                return d;
-            };
             r0.appendChild(makeGroup(b1, true));
             r0.appendChild(makeGroup(timeStr, true));
             r0.appendChild(makeGroup(b2, true));
@@ -222,7 +249,8 @@
                     var gWrap = document.createElement('div'); gWrap.className = 'group-wrap';
                     var labelText = ROWS[r][c][0];
                     var val = vals[ROWS[r][c][1]];
-                    var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
+                    var lblId = 'lbl-' + (r+1) + '-' + c;
+                    var lbl = document.getElementById(lblId);
 
                     if (labelText === "Wickets") {
                         lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
@@ -232,7 +260,10 @@
                     lbl.className = active ? 'label' : 'label inactive';
                     
                     var valStr = (val || "").toString().slice(-3).padStart(3, ' ');
-                    valStr.split('').forEach(char => gWrap.appendChild(createDigit(char)));
+                    var valChars = valStr.split('');
+                    for (var j = 0; j < valChars.length; j++) {
+                        gWrap.appendChild(createDigit(valChars[j]));
+                    }
                     container.appendChild(gWrap);
                 }
             }
@@ -252,7 +283,7 @@
         document.getElementById('fs-btn').onclick = function() {
             var el = document.documentElement;
             var rfs = el.requestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-            rfs.call(el);
+            if(rfs) rfs.call(el);
             this.style.display = 'none';
         };
     </script>
