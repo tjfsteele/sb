@@ -24,14 +24,15 @@
     
         #board { 
             width: 98vw; 
+            /* Constraint height to prevent vertical overflow on tablets */
             max-height: 96vh; 
             display: block;
         }
         
         #status-dot { 
             display: inline-block; 
-            width: 1.5vh; 
-            height: 1.5vh; 
+            width: 1.8vh; 
+            height: 1.8vh; 
             background-color: #0f0; 
             border-radius: 50%; 
             margin-right: 1vh; 
@@ -50,22 +51,23 @@
             opacity: 0.6;
         }
         
-        .row-container { width: 100%; margin-bottom: 2vh; } 
-        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2vh; }
+        /* Using vh (viewport height) to ensure scaling on large laptop screens */
+        .row-container { width: 100%; margin-bottom: 1.5vh; } 
+        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         .group-wrap { display: flex; justify-content: center; width: 32%; }
         
         .cell, .top-digit-wrap, .clock-colon-wrap { 
             position: relative; 
             display: inline-block; 
-            width: 5.5vw; 
-            max-width: 55px;
-            height: 8vh; 
+            width: 6vw; 
+            max-width: 65px;
+            height: 9vh; 
             margin: 0 0.5vw; 
         }
         
-        .top-digit-wrap { width: 3.5vw; max-width: 35px; height: 5vh; }
-        .clock-colon-wrap { width: 2vw; max-width: 20px; height: 5vh; }
+        .top-digit-wrap { width: 4vw; max-width: 40px; height: 6vh; }
+        .clock-colon-wrap { width: 2vw; max-width: 25px; height: 6vh; }
     
         .digit, .digit-bg { 
             font-family: 'DSEG7'; 
@@ -78,24 +80,24 @@
         .digit { 
             color: #00ff00; 
             z-index: 2; 
-            font-size: 8vh; 
-            line-height: 8vh; 
+            font-size: 9vh; 
+            line-height: 9vh; 
             text-shadow: 0 0 10px rgba(0, 255, 0, 0.5); 
             filter: brightness(1.1);
         }
     
-        .digit-bg { color: #000a00; z-index: 1; font-size: 8vh; line-height: 8vh; }
+        .digit-bg { color: #000a00; z-index: 1; font-size: 9vh; line-height: 9vh; }
     
-        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 5vh; line-height: 5vh; }
-        .clock-colon-wrap .digit { font-size: 4.5vh; line-height: 5vh; top: -0.5vh; }
+        .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 6vh; line-height: 6vh; }
+        .clock-colon-wrap .digit { font-size: 5.5vh; line-height: 6vh; top: -0.5vh; }
     
-        .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5vh; }
+        .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.2vh; }
         .label { 
-            /* Scaled specifically to screen height for maximum visibility */
-            font-size: 4.2vh; 
+            /* Significantly larger font size for high-res laptop screens */
+            font-size: 5vh; 
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.2vw;
+            letter-spacing: 0.3vw;
             color: #CCC;
             width: 33%;
             text-align: center;
@@ -117,6 +119,7 @@
     <div id="board"></div>
 
     <script>
+        // ES5 Syntax for Chromecast 1 compatibility
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
         var FAST_SPEED = 5000;
         var SLOW_SPEED = 30000;
@@ -134,7 +137,7 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        // ES5 Polyfill for 1st Gen Chromecast compatibility
+        // Polyfill for padStart for older Chromecast browsers
         if (!String.prototype.padStart) {
             String.prototype.padStart = function padStart(targetLength, padString) {
                 targetLength = targetLength >> 0;
