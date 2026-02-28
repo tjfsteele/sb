@@ -23,8 +23,9 @@
         }
     
         #board { 
-            width: 95vw; 
-            max-width: 1100px;
+            /* Fill most of the horizontal screen on laptops */
+            width: 98vw; 
+            /* Maintain vertical safety for tablets/Chromecast */
             max-height: 95vh; 
             display: block;
         }
@@ -44,7 +45,6 @@
         .dot-active { opacity: 1 !important; }
         .dot-error { opacity: 1 !important; background-color: #f00 !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; }
     
-        /* Fullscreen button moved to bottom right */
         #fs-btn { 
             position: fixed; 
             bottom: 15px; 
@@ -70,13 +70,14 @@
         .cell, .top-digit-wrap, .clock-colon-wrap { 
             position: relative; 
             display: inline-block; 
-            width: 55px; 
+            width: 5.5vw; /* Scale width relative to screen width */
+            max-width: 55px;
             height: 70px; 
-            margin: 0 5px; 
+            margin: 0 0.5vw; 
         }
         
-        .top-digit-wrap { width: 35px; height: 45px; }
-        .clock-colon-wrap { width: 20px; height: 45px; }
+        .top-digit-wrap { width: 3.5vw; max-width: 35px; height: 45px; }
+        .clock-colon-wrap { width: 2vw; max-width: 20px; height: 45px; }
     
         .digit, .digit-bg { 
             font-family: 'DSEG7'; 
@@ -121,7 +122,7 @@
         @media (max-height: 800px) {
             .row-container, .top-row-grid { margin-bottom: 8px; }
             .label { font-size: 20px; }
-            .cell { height: 60px; width: 48px; }
+            .cell { height: 60px; }
             .digit, .digit-bg { font-size: 60px; line-height: 60px; }
         }
 
@@ -161,7 +162,6 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        // Polyfill for padStart for older browsers
         if (!String.prototype.padStart) {
             String.prototype.padStart = function padStart(targetLength, padString) {
                 targetLength = targetLength >> 0;
