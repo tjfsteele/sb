@@ -40,9 +40,11 @@
             transition: opacity 0.1s; 
             box-shadow: 0 0 8px rgba(0, 255, 0, 0.8); 
         }
+        .dot-local { background-color: #0f0 !important; box-shadow: 0 0 8px rgba(0, 255, 0, 0.8) !important; }
+        .dot-cloud { background-color: #ffae00 !important; box-shadow: 0 0 8px rgba(255, 174, 0, 0.8) !important; }
+        .dot-error { background-color: #f00 !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; }
         .dot-active { opacity: 1 !important; }
-        .dot-error { opacity: 1 !important; background-color: #f00 !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; }
-    
+        
         #fs-btn { 
             position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; 
             background: #1a1a1a; color: #555; border: 1px solid #333; 
@@ -124,10 +126,13 @@
 
     <script>
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
+        var LOCAL_URL = "http://192.168.137.1/"; // Adjust path if necessary (e.g., /status or /score)
+        var NPOINT_URL = 'https://api.npoint.io/' + NPOINT_ID;
+        
         var FAST_SPEED = 5000;
         var SLOW_SPEED = 30000;
         var IDLE_TIME = 5 * 60 * 1000; 
-
+        
         var lastDataHash = "";
         var lastChangeTimestamp = Date.now();
         var currentInterval = FAST_SPEED;
@@ -155,7 +160,28 @@
                 }
             };
         }
-
+        function flashStatus(type) {
+            var dot = document.getElementById('status-dot');
+            if (!dot) return;
+    
+            // Clear previous classes
+            dot.className = ''; 
+            
+            // Apply color based on source
+            if (type === 'local') {
+                dot.classList.add('dot-local');
+            } else if (type === 'cloud') {
+                dot.classList.add('dot-cloud');
+            } else if (type === 'error') {
+                dot.classList.add('dot-error');
+            }
+    
+            // Trigger visible flash
+            dot.classList.add('dot-active');
+            setTimeout(function() {
+                dot.classList.remove('dot-active');
+            }, 500);
+        }
         function createDigit(char, isColon, isSmall) {
             var wrap = document.createElement('div');
             wrap.className = isColon ? 'clock-colon-wrap' : (isSmall ? 'top-digit-wrap' : 'cell');
@@ -173,37 +199,66 @@
         board.innerHTML = boardHtml;
 
         function updateScore() {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'https://api.npoint.io/' + NPOINT_ID + '?t=' + Date.now(), true);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    var dot = document.getElementById('status-dot');
-                    if (xhr.status === 200) {
-                        if(dot) dot.classList.remove('dot-error');
-                        var vals = JSON.parse(xhr.responseText);
-                        var currentHash = JSON.stringify(vals);
-                        if (currentHash !== lastDataHash) {
-                            lastDataHash = currentHash;
-                            lastChangeTimestamp = Date.now();
-                            switchInterval(FAST_SPEED);
-                        } else if (Date.now() - lastChangeTimestamp > IDLE_TIME) {
-                            switchInterval(SLOW_SPEED);
-                        }
-                        renderBoard(vals);
-                        var activeDot = document.getElementById('status-dot');
-                        if (activeDot) {
-                            activeDot.classList.add('dot-active');
-                            setTimeout(function() { activeDot.classList.remove('dot-active'); }, 300);
-                        }
+            var xhrLocal = new XMLHttpRequest();
+            // Use a short timeout so the board doesn't hang if local is down
+            xhrLocal.open('GET', LOCAL_URL + '?t=' + Date.now(), true);
+            xhrLocal.timeout = 2000; 
+    
+            xhrLocal.onreadystatechange = function () {
+                if (xhrLocal.readyState === 4) {
+                    if (xhrLocal.status === 200) {
+                        processData(xhrLocal.responseText, 'local');
                     } else {
-                        if(dot) dot.classList.add('dot-error');
+                        // Local failed, try nPoint
+                        fetchNpoint();
+                    }
+                }
+            };
+    
+            xhrLocal.ontimeout = function () { fetchNpoint(); };
+            xhrLocal.onerror = function () { fetchNpoint(); };
+            xhrLocal.send();
+        }
+    
+        function fetchNpoint() {
+            var xhrCloud = new XMLHttpRequest();
+            xhrCloud.open('GET', 'https://api.npoint.io/' + NPOINT_ID + '?t=' + Date.now(), true);
+            xhrCloud.onreadystatechange = function () {
+                if (xhrCloud.readyState === 4) {
+                    if (xhrCloud.status === 200) {
+                        processData(xhrCloud.responseText, 'cloud');
+                    } else {
+                        flashStatus('error');
                         switchInterval(FAST_SPEED);
                     }
                 }
             };
-            xhr.send();
+            xhrCloud.send();
         }
-
+    
+        function processData(responseText, source) {
+            try {
+                var vals = JSON.parse(responseText);
+                var currentHash = JSON.stringify(vals);
+    
+                if (currentHash !== lastDataHash) {
+                    lastDataHash = currentHash;
+                    lastChangeTimestamp = Date.now();
+                    switchInterval(FAST_SPEED);
+                } else if (Date.now() - lastChangeTimestamp > IDLE_TIME) {
+                    switchInterval(SLOW_SPEED);
+                }
+    
+                renderBoard(vals);
+                flashStatus(source);
+            } catch (e) {
+                if (source === 'local') {
+                    fetchNpoint();
+                } else {
+                    flashStatus('error');
+                }
+            }
+        }
         function makeGroup(s, small) {
             var d = document.createElement('div'); 
             d.style.display="flex";
