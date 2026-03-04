@@ -84,6 +84,9 @@
             z-index: 2; 
             font-size: 9vh; 
             line-height: 9vh; 
+            will-change: transform, opacity;
+            transform: translateZ(0); /* Forces GPU acceleration */
+            -webkit-transform: translateZ(0);
             /* text-shadow: 0 0 10px rgba(255, 100, 0, 0.5); 
             filter: brightness(1.1); */
         }
