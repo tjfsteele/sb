@@ -242,14 +242,20 @@
             try {
                 var vals = JSON.parse(responseText);
                 var currentHash = JSON.stringify(vals);
-    
+        
+                // Check if data is DIFFERENT from last fetch
                 if (currentHash !== lastDataHash) {
                     lastDataHash = currentHash;
                     lastChangeTimestamp = Date.now();
+                    
                     if (source === 'local') switchInterval(LOCAL_SPEED);
+                    
+                    // ONLY re-render the screen if the data has actually changed
+                    renderBoard(vals); 
                 } 
-                renderBoard(vals);
-                flashStatus(source);
+                
+                // Always flash the dot to show the connection is still alive
+                flashStatus(source); 
             } catch (e) {
                 flashStatus('error');
             }
@@ -269,6 +275,9 @@
         function renderBoard(vals) {
             var r0 = document.getElementById('row0');
             r0.innerHTML = '';
+    
+            // var updateTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
             var b1 = (vals[0] || "").toString().padStart(2, ' ');
             var b2 = (vals[1] || "").toString().padStart(2, ' ');
             var now = new Date();
