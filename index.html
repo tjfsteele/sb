@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scoreboard</title>
+    <title>Scoreboard - Live</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         @font-face { 
@@ -80,12 +80,12 @@
         }
     
         .digit { 
-            color: #ffae00; /* #A3C1AD; */
+            color: #ffae00;
             z-index: 2; 
             font-size: 9vh; 
             line-height: 9vh; 
             will-change: transform, opacity;
-            transform: translateZ(0); /* Forces GPU acceleration */
+            transform: translateZ(0);
             -webkit-transform: translateZ(0);
             text-shadow: 0 0 5px rgba(255, 174, 0, 0.5), 
                  0 0 2px rgba(255, 255, 255, 0.2);
@@ -110,10 +110,8 @@
         }
         .label.inactive { color: #111; }
         
-        /* Mobile Specific Overrides */
         @media (max-width: 600px) {
             #board { width: 100vw; }
-            /* Force the top row to stay within screen bounds */
             .top-row-grid { width: 95vw; margin: 0 auto 10px auto; }
             .label { font-size: 16px !important; letter-spacing: 0.5px !important; }
             .digit, .digit-bg { font-size: 32px !important; line-height: 32px !important; }
@@ -131,17 +129,19 @@
 
     <script>
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
-        var LOCAL_URL = "http://192.168.137.1/"; // Adjust path if necessary (e.g., /status or /score)
+        var LOCAL_URL = "http://192.168.137.1/"; 
         var NPOINT_URL = 'https://api.npoint.io/' + NPOINT_ID;
         
-        var FAST_SPEED = 5000;
-        var SLOW_SPEED = 30000;
+        // Refresh speeds
+        var LOCAL_SPEED = 1000;   // 1 second local refresh
+        var CLOUD_SPEED = 5000;   // 5 second cloud refresh
         var IDLE_TIME = 5 * 60 * 1000; 
         
         var lastDataHash = "";
         var lastChangeTimestamp = Date.now();
-        var currentInterval = FAST_SPEED;
         var pollTimer = null;
+        var currentInterval = LOCAL_SPEED;
+        var isUsingLocal = true;
 
         var ROWS = [
             [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
@@ -165,28 +165,18 @@
                 }
             };
         }
+
         function flashStatus(type) {
             var dot = document.getElementById('status-dot');
             if (!dot) return;
-    
-            // Clear previous classes
             dot.className = ''; 
-            
-            // Apply color based on source
-            if (type === 'local') {
-                dot.classList.add('dot-local');
-            } else if (type === 'cloud') {
-                dot.classList.add('dot-cloud');
-            } else if (type === 'error') {
-                dot.classList.add('dot-error');
-            }
-    
-            // Trigger visible flash
+            if (type === 'local') dot.classList.add('dot-local');
+            else if (type === 'cloud') dot.classList.add('dot-cloud');
+            else if (type === 'error') dot.classList.add('dot-error');
             dot.classList.add('dot-active');
-            setTimeout(function() {
-                dot.classList.remove('dot-active');
-            }, 500);
+            setTimeout(function() { dot.classList.remove('dot-active'); }, 500);
         }
+
         function createDigit(char, isColon, isSmall) {
             var wrap = document.createElement('div');
             wrap.className = isColon ? 'clock-colon-wrap' : (isSmall ? 'top-digit-wrap' : 'cell');
@@ -204,37 +194,44 @@
         board.innerHTML = boardHtml;
 
         function updateScore() {
-            var xhrLocal = new XMLHttpRequest();
-            // Use a short timeout so the board doesn't hang if local is down
-            xhrLocal.open('GET', LOCAL_URL + '?t=' + Date.now(), true);
-            xhrLocal.timeout = 2000; 
-    
-            xhrLocal.onreadystatechange = function () {
-                if (xhrLocal.readyState === 4) {
-                    if (xhrLocal.status === 200) {
-                        processData(xhrLocal.responseText, 'local');
-                    } else {
-                        // Local failed, try nPoint
-                        fetchNpoint();
+            if (isUsingLocal) {
+                var xhrLocal = new XMLHttpRequest();
+                xhrLocal.open('GET', LOCAL_URL + '?t=' + Date.now(), true);
+                xhrLocal.timeout = 800; // Shorter than the poll interval
+                xhrLocal.onreadystatechange = function () {
+                    if (xhrLocal.readyState === 4) {
+                        if (xhrLocal.status === 200) {
+                            processData(xhrLocal.responseText, 'local');
+                        } else {
+                            // Local unreachable, flip to cloud
+                            isUsingLocal = false;
+                            switchInterval(CLOUD_SPEED);
+                            fetchNpoint();
+                        }
                     }
-                }
-            };
-    
-            xhrLocal.ontimeout = function () { fetchNpoint(); };
-            xhrLocal.onerror = function () { fetchNpoint(); };
-            xhrLocal.send();
+                };
+                xhrLocal.ontimeout = function () { 
+                    isUsingLocal = false; 
+                    switchInterval(CLOUD_SPEED);
+                    fetchNpoint();
+                };
+                xhrLocal.send();
+            } else {
+                fetchNpoint();
+            }
         }
     
         function fetchNpoint() {
             var xhrCloud = new XMLHttpRequest();
-            xhrCloud.open('GET', 'https://api.npoint.io/' + NPOINT_ID + '?t=' + Date.now(), true);
+            xhrCloud.open('GET', NPOINT_URL + '?t=' + Date.now(), true);
             xhrCloud.onreadystatechange = function () {
                 if (xhrCloud.readyState === 4) {
                     if (xhrCloud.status === 200) {
                         processData(xhrCloud.responseText, 'cloud');
+                        // Occasionally attempt to go back to local
+                        if (Math.random() > 0.8) isUsingLocal = true;
                     } else {
                         flashStatus('error');
-                        switchInterval(FAST_SPEED);
                     }
                 }
             };
@@ -249,21 +246,15 @@
                 if (currentHash !== lastDataHash) {
                     lastDataHash = currentHash;
                     lastChangeTimestamp = Date.now();
-                    switchInterval(FAST_SPEED);
-                } else if (Date.now() - lastChangeTimestamp > IDLE_TIME) {
-                    switchInterval(SLOW_SPEED);
-                }
-    
+                    if (source === 'local') switchInterval(LOCAL_SPEED);
+                } 
                 renderBoard(vals);
                 flashStatus(source);
             } catch (e) {
-                if (source === 'local') {
-                    fetchNpoint();
-                } else {
-                    flashStatus('error');
-                }
+                flashStatus('error');
             }
         }
+
         function makeGroup(s, small) {
             var d = document.createElement('div'); 
             d.style.display="flex";
