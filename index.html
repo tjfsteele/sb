@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scoreboard - Live</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scoreboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @font-face { 
             font-family: 'DSEG7'; 
@@ -10,63 +10,56 @@
             font-weight: 700; font-style: normal;
         }
         body { background: #000; margin: 0; padding: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
-        
-        #board { width: 98vw; max-height: 92vh; display: block; }
-        
-        /* Layout structures */
+        #board { width: 96vw; max-height: 90vh; display: block; }
         .row-container { width: 100%; margin-bottom: 1.5vh; } 
-        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
+        .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2vh; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         .group-wrap { display: flex; justify-content: center; width: 32%; }
         .top-row-grid .group-wrap { width: auto; flex: 1; }
-        .top-row-grid .group-wrap:nth-child(1) { justify-content: flex-start; }
-        .top-row-grid .group-wrap:nth-child(2) { justify-content: center; }
-        .top-row-grid .group-wrap:nth-child(3) { justify-content: flex-end; }
-        
-        /* Digit boxes */
-        .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: inline-block; width: 6vw; max-width: 65px; height: 9vh; margin: 0 0.5vw; }
+        .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: inline-block; width: 6vw; max-width: 65px; height: 9vh; margin: 0 0.5vw; vertical-align: top; }
         .top-digit-wrap { width: 4vw; max-width: 40px; height: 6vh; }
         .clock-colon-wrap { width: 2vw; max-width: 20px; height: 6vh; margin: 0 0.2vw; }
-        
         .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; }
         .digit { color: #ffae00; z-index: 2; font-size: 9vh; line-height: 9vh; text-shadow: 0 0 5px rgba(255, 174, 0, 0.5); }
-        .digit-bg { color: #0a0800; z-index: 1; font-size: 9vh; line-height: 9vh; }
-        
-        /* Top row specific sizes */
+        .digit-bg { color: #0d0d0d; z-index: 1; font-size: 9vh; line-height: 9vh; }
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 6vh; line-height: 6vh; }
         .clock-colon-wrap .digit { font-size: 5.5vh; line-height: 6vh; top: -0.5vh; }
 
-        .blink { animation: blinker 1s infinite step-start; }
+        @-webkit-keyframes blinker { 50% { opacity: 0; } }
         @keyframes blinker { 50% { opacity: 0; } }
+        .blink { -webkit-animation: blinker 1s infinite step-start; animation: blinker 1s infinite step-start; }
     
         .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.2vh; }
-        .label { font-size: 5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3vw; color: #CCC; width: 33%; text-align: center; display: block; white-space: nowrap; }
+        .label { font-size: 4.5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2vw; color: #CCC; width: 33%; text-align: center; white-space: nowrap; }
         .label.inactive { color: #111; }
 
-        /* UI Elements */
-        #status-dot { display: inline-block; width: 1.8vh; height: 1.8vh; background-color: #0f0; border-radius: 50%; margin-right: 1vh; vertical-align: middle; opacity: 0; transition: opacity 0.1s; box-shadow: 0 0 8px rgba(0, 255, 0, 0.8); }
+        /* Smaller Status Dot */
+        #status-dot { 
+            display: inline-block; 
+            width: 1vh; 
+            height: 1vh; 
+            background-color: #0f0; 
+            border-radius: 50%; 
+            margin-right: 0.8vh; 
+            opacity: 0; 
+            vertical-align: 15%; /* Aligns tiny dot better with text height */
+            box-shadow: 0 0 4px rgba(0, 255, 0, 0.6); 
+        }
         .dot-local { background-color: #0f0 !important; }
         .dot-cloud { background-color: #ffae00 !important; }
         .dot-error { background-color: #f00 !important; }
         .dot-active { opacity: 1 !important; }
-        
-        #fs-btn { position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; background: #1a1a1a; color: #555; border: 1px solid #333; z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; opacity: 0.6; }
-        #last-update { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: #444; font-size: 1.8vh; letter-spacing: 1px; text-transform: uppercase; }
 
-        /* Mobile Specific Fixes */
+        #fs-btn { position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; background: #1a1a1a; color: #555; border: 1px solid #333; z-index: 1000; cursor: pointer; border-radius: 4px; opacity: 0.5; }
+        #last-update { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); color: #333; font-size: 1.5vh; text-transform: uppercase; }
+
         @media (max-width: 600px) {
-            #board { width: 100vw; }
-            .label { font-size: 14px !important; letter-spacing: 0.5px !important; }
-            .digit, .digit-bg { font-size: 32px !important; line-height: 32px !important; }
+            .label { font-size: 14px !important; }
+            #status-dot { width: 6px; height: 6px; margin-right: 4px; }
+            .digit, .digit-bg { font-size: 30px !important; line-height: 32px !important; }
             .cell { height: 32px !important; width: 22px !important; margin: 0 2px !important; }
-            
-            /* Give the clock digits breathing room */
             .top-digit-wrap { height: 22px !important; width: 16px !important; margin: 0 3px !important; }
-            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 20px !important; line-height: 22px !important; }
-            .clock-colon-wrap { width: 10px !important; height: 22px !important; margin: 0 1px !important; }
-            .clock-colon-wrap .digit { font-size: 18px !important; line-height: 22px !important; }
-            
-            #last-update { font-size: 10px; bottom: 10px; }
+            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 20px !important; }
         }
     </style>
 </head>
@@ -86,13 +79,12 @@
         var isUsingLocal = true;
 
         var ROWS = [
-            [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
-            [["Extras", 7],   ["Wickets", 5], ["Overs", 6]],
-            [["1st Inns", 10],["Last Man", 8],["Overs Rem", 12]],
-            [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
+            [["Batter", 2], ["Total", 4], ["Batter", 3]],
+            [["Extras", 7], ["Wickets", 5], ["Overs", 6]],
+            [["1st Inns", 10], ["Last Man", 8], ["Overs Rem", 12]],
+            [["To Win", 11], ["Last Wkt", 9], ["DLS Par", 13]]
         ];
 
-        // Polyfill
         if (!String.prototype.padStart) {
             String.prototype.padStart = function(t, p) {
                 t = t >> 0; p = String(p || ' ');
@@ -115,7 +107,7 @@
 
         function initUI() {
             var board = document.getElementById('board');
-            
+            board.innerHTML = '';
             var r0 = document.createElement('div'); r0.className = 'top-row-grid';
             var g1 = document.createElement('div'); g1.className = 'group-wrap';
             refs.b1 = [cDig(g1,0,1), cDig(g1,0,1)];
@@ -151,19 +143,27 @@
             var h = d.getHours().toString().padStart(2,'0');
             var m = d.getMinutes().toString().padStart(2,'0');
             var s = h + ":" + m;
-            for(var i=0; i<5; i++) if(i !== 2) refs.time[i].textContent = s[i];
+            if (refs.time.length === 5) {
+                for(var i=0; i<5; i++) if(i !== 2) refs.time[i].textContent = s[i];
+            }
         }
 
         function render(vals) {
             tickClock();
             var b1 = (vals[0]||"").toString().padStart(2,' ');
             var b2 = (vals[1]||"").toString().padStart(2,' ');
-            for(var i=0; i<2; i++) { refs.b1[i].textContent = b1[i]; refs.b2[i].textContent = b2[i]; }
+            for(var i=0; i<2; i++) { 
+                if(refs.b1[i]) refs.b1[i].textContent = b1[i]; 
+                if(refs.b2[i]) refs.b2[i].textContent = b2[i]; 
+            }
             for(var r=0; r<4; r++) {
                 for(var c=0; c<3; c++) {
                     var v = (vals[ROWS[r][c][1]]||"").toString().slice(-3).padStart(3,' ');
-                    document.getElementById('l-'+r+'-'+c).className = v.trim()==="" ? 'label inactive' : 'label';
-                    for(var j=0; j<3; j++) refs.rows[r][c][j].textContent = v[j];
+                    var lEl = document.getElementById('l-'+r+'-'+c);
+                    if(lEl) lEl.className = v.trim()==="" ? 'label inactive' : 'label';
+                    for(var j=0; j<3; j++) {
+                        if(refs.rows[r][c][j]) refs.rows[r][c][j].textContent = v[j];
+                    }
                 }
             }
             document.getElementById('last-update').textContent = "UPDATED: " + new Date().toLocaleTimeString();
@@ -172,7 +172,7 @@
         function poll() {
             var url = (isUsingLocal ? LOCAL_URL : NPOINT_URL) + "?t=" + Date.now();
             var x = new XMLHttpRequest();
-            x.open('GET', url, true); x.timeout = 2000;
+            x.open('GET', url, true); x.timeout = 2500;
             x.onreadystatechange = function () {
                 if (x.readyState === 4) {
                     if (x.status === 200) {
