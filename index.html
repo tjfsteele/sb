@@ -21,33 +21,23 @@
         
         #fs-btn { position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; background: #1a1a1a; color: #555; border: 1px solid #333; z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; opacity: 0.6; }
         
-        #last-update { 
-            position: fixed; 
-            bottom: 20px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            color: #444; 
-            font-size: 1.8vh; 
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+        #last-update { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: #444; font-size: 1.8vh; letter-spacing: 1px; text-transform: uppercase; }
 
         .row-container { width: 100%; margin-bottom: 1.5vh; } 
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         
-        .top-row-grid .group-wrap { width: auto; flex: 1; display: flex; }
+        .group-wrap { display: flex; justify-content: center; width: 32%; }
+        .top-row-grid .group-wrap { width: auto; flex: 1; }
         .top-row-grid .group-wrap:nth-child(1) { justify-content: flex-start; }
         .top-row-grid .group-wrap:nth-child(2) { justify-content: center; }
         .top-row-grid .group-wrap:nth-child(3) { justify-content: flex-end; }
-        
-        .group-wrap { display: flex; justify-content: center; width: 32%; }
         
         .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: inline-block; width: 6vw; max-width: 65px; height: 9vh; margin: 0 0.5vw; }
         .top-digit-wrap { width: 4vw; max-width: 40px; height: 6vh; }
         .clock-colon-wrap { width: 2vw; max-width: 20px; height: 6vh; margin: 0 0.2vw; }
         
-        .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; }
+        .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; min-height: 1em; }
         .digit { color: #ffae00; z-index: 2; font-size: 9vh; line-height: 9vh; text-shadow: 0 0 5px rgba(255, 174, 0, 0.5); }
         .digit-bg { color: #0a0800; z-index: 1; font-size: 9vh; line-height: 9vh; }
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 6vh; line-height: 6vh; }
@@ -61,33 +51,25 @@
         .label.inactive { color: #111; }
 
         @media (max-width: 600px) {
-            #board { width: 100vw; }
-            .label { font-size: 14px !important; letter-spacing: 0.5px !important; }
+            .label { font-size: 14px !important; }
             .digit, .digit-bg { font-size: 32px !important; line-height: 32px !important; }
             .cell { height: 32px !important; width: 22px !important; }
             .top-digit-wrap { height: 22px !important; width: 15px !important; }
             .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 18px !important; line-height: 22px !important; }
-            .clock-colon-wrap { width: 8px !important; height: 22px !important; }
-            .clock-colon-wrap .digit { font-size: 16px !important; line-height: 22px !important; }
-            #last-update { font-size: 10px; bottom: 10px; }
+            #last-update { font-size: 10px; }
         }
     </style>
 </head>
 <body>
     <button id="fs-btn">⛶</button>
-    <div id="board"></div>
-    <div id="last-update">CONNECTING...</div>
+    <div id="board">
+        </div>
+    <div id="last-update">INITIALIZING...</div>
 
     <script>
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
         var LOCAL_URL = "http://192.168.137.1/"; 
         var NPOINT_URL = 'https://api.npoint.io/' + NPOINT_ID;
-        var LOCAL_SPEED = 1000;
-        var CLOUD_SPEED = 5000;
-        var pollTimer = null;
-        var currentInterval = LOCAL_SPEED;
-        var isUsingLocal = true;
-
         var ROWS = [
             [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
             [["Extras", 7],   ["Wickets", 5], ["Overs", 6]],
@@ -95,164 +77,124 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        if (!String.prototype.padStart) {
-            String.prototype.padStart = function(targetLength, padString) {
-                targetLength = targetLength >> 0;
-                padString = String(typeof padString !== 'undefined' ? padString : ' ');
-                if (this.length > targetLength) return String(this);
-                targetLength = targetLength - this.length;
-                if (targetLength > padString.length) padString += padString.repeat(targetLength / padString.length);
-                return padString.slice(0, targetLength) + String(this);
-            };
-        }
+        var digitRefs = { b1: [], time: [], b2: [], rows: [] };
 
-        function createDigitElement(isColon, isSmall) {
+        function createDigit(parent, isColon, isSmall) {
             var wrap = document.createElement('div');
             wrap.className = isColon ? 'clock-colon-wrap' : (isSmall ? 'top-digit-wrap' : 'cell');
-            var bg = document.createElement('div'); bg.className = 'digit-bg'; bg.innerHTML = isColon ? ':' : '8';
-            var fg = document.createElement('div'); fg.className = 'digit'; 
-            if (isColon) { fg.className += ' blink'; fg.innerHTML = ':'; }
-            wrap.appendChild(bg); wrap.appendChild(fg);
-            return wrap;
+            wrap.innerHTML = '<div class="digit-bg">' + (isColon ? ':' : '8') + '</div><div class="digit' + (isColon ? ' blink' : '') + '">' + (isColon ? ':' : '') + '</div>';
+            parent.appendChild(wrap);
+            return wrap.querySelector('.digit');
         }
 
-        // --- Layout Initialization ---
+        // Build UI
         var board = document.getElementById('board');
-        var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
-        for (var i = 0; i < ROWS.length; i++) {
-            boardHtml += '<div class="row-container"><div class="label-row"><div id="lbl-'+(i+1)+'-0" class="label inactive"></div><div id="lbl-'+(i+1)+'-1" class="label inactive"></div><div id="lbl-'+(i+1)+'-2" class="label inactive"></div></div><div id="row'+(i+1)+'" class="digit-row"></div></div>';
-        }
-        board.innerHTML = boardHtml;
+        var r0 = document.createElement('div'); r0.className = 'row-container';
+        r0.innerHTML = '<div class="top-row-grid" id="row0"></div>';
+        board.appendChild(r0);
+        var r0Grid = document.getElementById('row0');
 
-        // Populate Labels and Status Dot structure immediately
-        for (var r = 0; r < ROWS.length; r++) {
-            for (var c = 0; c < 3; c++) {
-                var labelText = ROWS[r][c][0];
-                var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
-                if (labelText === "Wickets") {
-                    lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
-                } else {
-                    lbl.textContent = labelText;
-                }
-            }
-        }
-
-        var digitRefs = { b1: [], time: [], b2: [], rows: [] };
-        var r0 = document.getElementById('row0');
-        
+        // Top Row Setup
         var g1 = document.createElement('div'); g1.className = 'group-wrap';
-        for(var i=0; i<2; i++) { var el = createDigitElement(false, true); g1.appendChild(el); digitRefs.b1.push(el.querySelector('.digit')); }
-        r0.appendChild(g1);
+        digitRefs.b1.push(createDigit(g1, false, true), createDigit(g1, false, true));
+        r0Grid.appendChild(g1);
 
-        var gTime = document.createElement('div'); gTime.className = 'group-wrap';
-        for(var i=0; i<5; i++) { 
-            var isColon = (i===2);
-            var el = createDigitElement(isColon, true); gTime.appendChild(el); 
-            digitRefs.time.push({ dom: el.querySelector('.digit'), isColon: isColon }); 
-        }
-        r0.appendChild(gTime);
+        var gT = document.createElement('div'); gT.className = 'group-wrap';
+        digitRefs.time.push({d: createDigit(gT, false, true), c: false});
+        digitRefs.time.push({d: createDigit(gT, false, true), c: false});
+        digitRefs.time.push({d: createDigit(gT, true, true),  c: true});
+        digitRefs.time.push({d: createDigit(gT, false, true), c: false});
+        digitRefs.time.push({d: createDigit(gT, false, true), c: false});
+        r0Grid.appendChild(gT);
 
         var g2 = document.createElement('div'); g2.className = 'group-wrap';
-        for(var i=0; i<2; i++) { var el = createDigitElement(false, true); g2.appendChild(el); digitRefs.b2.push(el.querySelector('.digit')); }
-        r0.appendChild(g2);
+        digitRefs.b2.push(createDigit(g2, false, true), createDigit(g2, false, true));
+        r0Grid.appendChild(g2);
 
+        // Grid Rows Setup
         for (var r = 0; r < ROWS.length; r++) {
-            var rowEl = document.getElementById('row' + (r + 1));
+            var cont = document.createElement('div'); cont.className = 'row-container';
+            cont.innerHTML = '<div class="label-row"><div class="label" id="l-'+r+'-0"></div><div class="label" id="l-'+r+'-1"></div><div class="label" id="l-'+r+'-2"></div></div><div class="digit-row" id="r-'+r+'"></div>';
+            board.appendChild(cont);
             digitRefs.rows[r] = [];
+            var dRow = document.getElementById('r-'+r);
             for (var c = 0; c < 3; c++) {
-                var gWrap = document.createElement('div'); gWrap.className = 'group-wrap';
-                digitRefs.rows[r][c] = [];
-                for (var j = 0; j < 3; j++) {
-                    var el = createDigitElement(false, false);
-                    gWrap.appendChild(el);
-                    digitRefs.rows[r][c].push(el.querySelector('.digit'));
-                }
-                rowEl.appendChild(gWrap);
+                var lbl = document.getElementById('l-'+r+'-c'); // Dummy
+                var labelText = ROWS[r][c][0];
+                var labelEl = document.getElementById('l-'+r+'-'+c);
+                if (labelText === "Wickets") labelEl.innerHTML = '<span id="status-dot"></span>Wickets';
+                else labelEl.textContent = labelText;
+                labelEl.className = 'label inactive';
+
+                var g = document.createElement('div'); g.className = 'group-wrap';
+                digitRefs.rows[r][c] = [createDigit(g, false, false), createDigit(g, false, false), createDigit(g, false, false)];
+                dRow.appendChild(g);
             }
         }
 
-        // --- Instant Clock Initialization ---
-        function updateClockOnly() {
-            var now = new Date();
-            var tStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        function updateClock() {
+            var d = new Date();
+            var s = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
             for(var i=0; i<5; i++) {
-                if (digitRefs.time[i].isColon) continue; 
-                if (digitRefs.time[i].dom.textContent !== tStr[i]) digitRefs.time[i].dom.textContent = tStr[i];
+                if(!digitRefs.time[i].c && digitRefs.time[i].d.textContent !== s[i]) digitRefs.time[i].d.textContent = s[i];
             }
         }
 
-        function renderBoard(vals) {
-            var b1Str = (vals[0] || "").toString().padStart(2, ' ');
-            var b2Str = (vals[1] || "").toString().padStart(2, ' ');
-            
-            // Updates clock numbers from local time
-            updateClockOnly();
-            
-            for(var i=0; i<2; i++) { if(digitRefs.b1[i].textContent !== b1Str[i]) digitRefs.b1[i].textContent = b1Str[i]; }
-            for(var i=0; i<2; i++) { if(digitRefs.b2[i].textContent !== b2Str[i]) digitRefs.b2[i].textContent = b2Str[i]; }
-
+        function render(vals) {
+            updateClock();
+            var b1s = (vals[0] || "").toString().padStart(2, ' ');
+            var b2s = (vals[1] || "").toString().padStart(2, ' ');
+            for(var i=0; i<2; i++) { 
+                if(digitRefs.b1[i].textContent !== b1s[i]) digitRefs.b1[i].textContent = b1s[i];
+                if(digitRefs.b2[i].textContent !== b2s[i]) digitRefs.b2[i].textContent = b2s[i];
+            }
             for (var r = 0; r < ROWS.length; r++) {
                 for (var c = 0; c < 3; c++) {
-                    var val = (vals[ROWS[r][c][1]] || "").toString().slice(-3).padStart(3, ' ');
-                    var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
-                    lbl.className = (val.trim() !== "") ? 'label' : 'label inactive';
+                    var v = (vals[ROWS[r][c][1]] || "").toString().slice(-3).padStart(3, ' ');
+                    document.getElementById('l-'+r+'-'+c).className = (v.trim() !== "") ? 'label' : 'label inactive';
                     for (var j = 0; j < 3; j++) {
-                        if (digitRefs.rows[r][c][j].textContent !== val[j]) digitRefs.rows[r][c][j].textContent = val[j];
+                        if (digitRefs.rows[r][c][j].textContent !== v[j]) digitRefs.rows[r][c][j].textContent = v[j];
                     }
                 }
             }
-            var now = new Date();
-            var ts = "Updated: " + now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0') + ":" + now.getSeconds().toString().padStart(2, '0');
-            document.getElementById('last-update').textContent = ts;
-            document.getElementById('last-update').style.color = "#777";
+            var d = new Date();
+            document.getElementById('last-update').textContent = "UPDATED: " + d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0') + ":" + d.getSeconds().toString().padStart(2, '0');
         }
 
-        function updateScore() {
-            var url = isUsingLocal ? LOCAL_URL : NPOINT_URL;
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url + '?t=' + Date.now(), true);
-            xhr.timeout = 2000;
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        try { renderBoard(JSON.parse(xhr.responseText)); flashStatus(isUsingLocal ? 'local' : 'cloud'); } catch (e) { flashStatus('error'); }
+        function poll() {
+            var url = (isUsingLocal ? LOCAL_URL : NPOINT_URL) + "?t=" + Date.now();
+            var x = new XMLHttpRequest();
+            x.open('GET', url, true);
+            x.timeout = 2000;
+            x.onreadystatechange = function () {
+                if (x.readyState === 4) {
+                    if (x.status === 200) {
+                        try { render(JSON.parse(x.responseText)); flash(isUsingLocal ? 'local' : 'cloud'); } catch (e) { flash('error'); }
                     } else if (isUsingLocal) {
-                        isUsingLocal = false; switchInterval(CLOUD_SPEED); updateScore();
+                        isUsingLocal = false; poll();
                     }
                 }
             };
-            xhr.onerror = function() { if (isUsingLocal) { isUsingLocal = false; switchInterval(CLOUD_SPEED); updateScore(); } };
-            xhr.send();
+            x.onerror = function() { if(isUsingLocal) { isUsingLocal = false; poll(); } };
+            x.send();
         }
 
-        function switchInterval(ms) {
-            if (currentInterval !== ms) {
-                currentInterval = ms;
-                clearInterval(pollTimer);
-                pollTimer = setInterval(updateScore, currentInterval);
-            }
-        }
-
-        function flashStatus(type) {
+        function flash(t) {
             var dot = document.getElementById('status-dot');
             if (!dot) return;
-            dot.className = ''; 
-            if (type === 'local') dot.className = 'dot-local dot-active';
-            else if (type === 'cloud') dot.className = 'dot-cloud dot-active';
-            else if (type === 'error') dot.className = 'dot-error dot-active';
+            dot.className = 'dot-' + t + ' dot-active';
             setTimeout(function() { dot.classList.remove('dot-active'); }, 500);
         }
 
-        // Initialize clock numbers before network request
-        updateClockOnly();
+        var isUsingLocal = true;
+        updateClock();
+        setInterval(updateClock, 1000); // Clock updates every second regardless of data
+        setInterval(poll, 1000);
+        poll();
 
-        pollTimer = setInterval(updateScore, currentInterval);
-        updateScore();
-        
         document.getElementById('fs-btn').onclick = function() {
-            var el = document.documentElement;
-            var rfs = el.requestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-            if(rfs) rfs.call(el);
+            var e = document.documentElement;
+            if(e.requestFullscreen) e.requestFullscreen();
             this.style.display = 'none';
         };
     </script>
