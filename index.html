@@ -11,7 +11,13 @@
         }
         body { background: #000; margin: 0; padding: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
         
-        #board { width: 98vw; max-height: 92vh; display: block; }
+        #board { width: 98vw; max-height: 92vh; display: block; opacity: 0; transition: opacity 0.5s ease-in; }
+        #board.ready { opacity: 1; }
+
+        /* Loading Overlay */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #1a1a1a; border-top: 4px solid #ffae00; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         #status-dot { display: inline-block; width: 1.8vh; height: 1.8vh; background-color: #0f0; border-radius: 50%; margin-right: 1vh; vertical-align: middle; opacity: 0; transition: opacity 0.1s; box-shadow: 0 0 8px rgba(0, 255, 0, 0.8); }
         .dot-local { background-color: #0f0 !important; }
@@ -21,17 +27,7 @@
         
         #fs-btn { position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; background: #1a1a1a; color: #555; border: 1px solid #333; z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; opacity: 0.6; }
         
-        /* Fixed "Updated" Timestamp - Readable but subtle */
-        #last-update { 
-            position: fixed; 
-            bottom: 20px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            color: #777; 
-            font-size: 1.8vh; 
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+        #last-update { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: #444; font-size: 1.8vh; letter-spacing: 1px; text-transform: uppercase; }
 
         .row-container { width: 100%; margin-bottom: 1.5vh; } 
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
@@ -49,7 +45,7 @@
         .clock-colon-wrap { width: 2vw; max-width: 20px; height: 6vh; margin: 0 0.2vw; }
         
         .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; }
-        .digit { color: #ffae00; z-index: 2; font-size: 9vh; line-height: 9vh; text-shadow: 0 0 5px rgba(255, 174, 0, 0.5); }
+        .digit { color: #ffae00; z-index: 2; font-size: 9vh; line-height: 9vh; text-shadow: 0 0 5px rgba(255, 174, 0, 0.5); min-height: 1px; }
         .digit-bg { color: #0a0800; z-index: 1; font-size: 9vh; line-height: 9vh; }
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 6vh; line-height: 6vh; }
         .clock-colon-wrap .digit { font-size: 5.5vh; line-height: 6vh; top: -0.5vh; }
@@ -61,7 +57,6 @@
         .label { font-size: 5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3vw; color: #CCC; width: 33%; text-align: center; display: block; white-space: nowrap; }
         .label.inactive { color: #111; }
 
-        /* Mobile Fixes - Prevents overlapping seen in screenshot */
         @media (max-width: 600px) {
             #board { width: 100vw; }
             .label { font-size: 14px !important; letter-spacing: 0.5px !important; }
@@ -71,11 +66,15 @@
             .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 18px !important; line-height: 22px !important; }
             .clock-colon-wrap { width: 8px !important; height: 22px !important; }
             .clock-colon-wrap .digit { font-size: 16px !important; line-height: 22px !important; }
-            #last-update { font-size: 10px; bottom: 10px; }
         }
     </style>
 </head>
 <body>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div style="color: #555; letter-spacing: 2px; font-size: 12px;">SYNCING SCOREBOARD</div>
+    </div>
+
     <button id="fs-btn">⛶</button>
     <div id="board"></div>
     <div id="last-update">CONNECTING...</div>
@@ -89,6 +88,7 @@
         var pollTimer = null;
         var currentInterval = LOCAL_SPEED;
         var isUsingLocal = true;
+        var firstLoadDone = false;
 
         var ROWS = [
             [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
@@ -97,7 +97,7 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        // ES5 Polyfill
+        // Polyfill
         if (!String.prototype.padStart) {
             String.prototype.padStart = function(targetLength, padString) {
                 targetLength = targetLength >> 0;
@@ -119,6 +119,7 @@
             return wrap;
         }
 
+        // Initialize Structure
         var board = document.getElementById('board');
         var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
         for (var i = 0; i < ROWS.length; i++) {
@@ -189,6 +190,13 @@
             }
             var ts = "Updated: " + now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0') + ":" + now.getSeconds().toString().padStart(2, '0');
             document.getElementById('last-update').textContent = ts;
+
+            // Hide loader on first successful render
+            if (!firstLoadDone) {
+                firstLoadDone = true;
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('board').classList.add('ready');
+            }
         }
 
         function updateScore() {
@@ -205,7 +213,7 @@
                     }
                 }
             };
-            xhr.onerror = function() { if (isUsingLocal) { isUsingLocal = false; switchInterval(CLOUD_SPEED); } };
+            xhr.onerror = function() { if (isUsingLocal) { isUsingLocal = false; switchInterval(CLOUD_SPEED); updateScore(); } };
             xhr.send();
         }
 
