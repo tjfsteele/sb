@@ -23,11 +23,17 @@
         .row-container { width: 100%; margin-bottom: 1.5vh; } 
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
+        
+        /* Fixed spacing for top row groups */
+        .top-row-grid .group-wrap { width: auto; flex: 1; display: flex; justify-content: center; }
+        .top-row-grid .group-wrap:first-child { justify-content: flex-start; }
+        .top-row-grid .group-wrap:last-child { justify-content: flex-end; }
+        
         .group-wrap { display: flex; justify-content: center; width: 32%; }
         
         .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: inline-block; width: 6vw; max-width: 65px; height: 9vh; margin: 0 0.5vw; }
         .top-digit-wrap { width: 4vw; max-width: 40px; height: 6vh; }
-        .clock-colon-wrap { width: 2vw; max-width: 25px; height: 6vh; }
+        .clock-colon-wrap { width: 2vw; max-width: 20px; height: 6vh; margin: 0 0.2vw; }
         
         .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; }
         .digit { color: #ffae00; z-index: 2; font-size: 9vh; line-height: 9vh; text-shadow: 0 0 5px rgba(255, 174, 0, 0.5); }
@@ -65,7 +71,6 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        // Ensure old Chrome/ES5 compatibility
         if (!String.prototype.padStart) {
             String.prototype.padStart = function(targetLength, padString) {
                 targetLength = targetLength >> 0;
@@ -87,7 +92,6 @@
             return wrap;
         }
 
-        // Initialize board
         var board = document.getElementById('board');
         var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
         for (var i = 0; i < ROWS.length; i++) {
@@ -95,18 +99,14 @@
         }
         board.innerHTML = boardHtml;
 
-        // Store references to the digits for fast updating
         var digitRefs = { b1: [], time: [], b2: [], rows: [] };
         var r0 = document.getElementById('row0');
         
-        // Group 1: Batter 1
         var g1 = document.createElement('div'); g1.className = 'group-wrap';
         for(var i=0; i<2; i++) { var el = createDigitElement(false, true); g1.appendChild(el); digitRefs.b1.push(el.querySelector('.digit')); }
         r0.appendChild(g1);
 
-        // Group 2: Clock
         var gTime = document.createElement('div'); gTime.className = 'group-wrap';
-        var tChars = ['0','0',':','0','0'];
         for(var i=0; i<5; i++) { 
             var isColon = (i===2);
             var el = createDigitElement(isColon, true); gTime.appendChild(el); 
@@ -114,12 +114,10 @@
         }
         r0.appendChild(gTime);
 
-        // Group 3: Batter 2
         var g2 = document.createElement('div'); g2.className = 'group-wrap';
         for(var i=0; i<2; i++) { var el = createDigitElement(false, true); g2.appendChild(el); digitRefs.b2.push(el.querySelector('.digit')); }
         r0.appendChild(g2);
 
-        // Setup Main Rows
         for (var r = 0; r < ROWS.length; r++) {
             var rowEl = document.getElementById('row' + (r + 1));
             digitRefs.rows[r] = [];
@@ -150,27 +148,25 @@
             var b1Str = (vals[0] || "").toString().padStart(2, ' ');
             var b2Str = (vals[1] || "").toString().padStart(2, ' ');
             var now = new Date();
-            var tStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            var hours = now.getHours().toString().padStart(2, '0');
+            var mins = now.getMinutes().toString().padStart(2, '0');
+            var tStr = hours + ":" + mins;
             
-            // Update Top Groups
             for(var i=0; i<2; i++) { if(digitRefs.b1[i].textContent !== b1Str[i]) digitRefs.b1[i].textContent = b1Str[i]; }
             for(var i=0; i<2; i++) { if(digitRefs.b2[i].textContent !== b2Str[i]) digitRefs.b2[i].textContent = b2Str[i]; }
             for(var i=0; i<5; i++) {
-                if (digitRefs.time[i].isColon) continue; // Skip colon to let CSS handle blink
+                if (digitRefs.time[i].isColon) continue; 
                 if (digitRefs.time[i].dom.textContent !== tStr[i]) digitRefs.time[i].dom.textContent = tStr[i];
             }
 
-            // Update Main Rows
             for (var r = 0; r < ROWS.length; r++) {
                 for (var c = 0; c < 3; c++) {
                     var labelText = ROWS[r][c][0];
                     var val = (vals[ROWS[r][c][1]] || "").toString().slice(-3).padStart(3, ' ');
                     var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
-                    
                     if (labelText === "Wickets") {
                         if (!lbl.querySelector('#status-dot')) lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
                     } else if (lbl.textContent !== labelText) { lbl.textContent = labelText; }
-                    
                     lbl.className = (val.trim() !== "") ? 'label' : 'label inactive';
                     for (var j = 0; j < 3; j++) {
                         if (digitRefs.rows[r][c][j].textContent !== val[j]) digitRefs.rows[r][c][j].textContent = val[j];
