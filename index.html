@@ -150,7 +150,6 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        // Polyfill for padStart
         if (!String.prototype.padStart) {
             String.prototype.padStart = function(targetLength, padString) {
                 targetLength = targetLength >> 0;
@@ -168,11 +167,12 @@
             var bg = document.createElement('div'); bg.className = 'digit-bg'; bg.innerHTML = isColon ? ':' : '8';
             var fg = document.createElement('div'); fg.className = 'digit'; 
             if (shouldBlink) fg.className += ' blink';
+            // Store a flag on the element so we know it's a colon later
+            if (isColon) wrap.dataset.isColon = "true";
             wrap.appendChild(bg); wrap.appendChild(fg);
             return wrap;
         }
 
-        // Initialize board structure once
         var board = document.getElementById('board');
         var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
         for (var i = 0; i < ROWS.length; i++) {
@@ -180,19 +180,19 @@
         }
         board.innerHTML = boardHtml;
 
-        // Build the actual digit DOM elements once to save memory/CPU
         var digitRefs = { top: [], rows: [] };
         
-        // Setup Row 0 (Batter 1, Clock, Batter 2)
         var r0 = document.getElementById('row0');
-        for(var i=0; i<7; i++) { // 2 + 3 (clock) + 2
+        for(var i=0; i<7; i++) { 
             var isColon = (i === 3);
             var el = createDigitElement(isColon, true, isColon);
             r0.appendChild(el);
-            digitRefs.top.push(el.querySelector('.digit'));
+            digitRefs.top.push({
+                dom: el.querySelector('.digit'),
+                isColon: isColon
+            });
         }
 
-        // Setup Main Rows
         for (var r = 0; r < ROWS.length; r++) {
             var rowEl = document.getElementById('row' + (r + 1));
             digitRefs.rows[r] = [];
@@ -220,7 +220,6 @@
         }
 
         function renderBoard(vals) {
-            // Update Top Row
             var b1 = (vals[0] || "").toString().padStart(2, ' ');
             var b2 = (vals[1] || "").toString().padStart(2, ' ');
             var now = new Date();
@@ -228,10 +227,15 @@
             var topStr = b1 + timeStr + b2;
             
             for(var i=0; i<topStr.length; i++) {
-                if (digitRefs.top[i].textContent !== topStr[i]) digitRefs.top[i].textContent = topStr[i];
+                // FIX: If it's a colon, we DON'T update the textContent. 
+                // This lets the CSS animation run without being interrupted.
+                if (digitRefs.top[i].isColon) continue; 
+                
+                if (digitRefs.top[i].dom.textContent !== topStr[i]) {
+                    digitRefs.top[i].dom.textContent = topStr[i];
+                }
             }
 
-            // Update Main Rows
             for (var r = 0; r < ROWS.length; r++) {
                 for (var c = 0; c < 3; c++) {
                     var labelText = ROWS[r][c][0];
@@ -249,7 +253,9 @@
                     
                     var valStr = (val || "").toString().slice(-3).padStart(3, ' ');
                     for (var j = 0; j < 3; j++) {
-                        if (digitRefs.rows[r][c][j].textContent !== valStr[j]) digitRefs.rows[r][c][j].textContent = valStr[j];
+                        if (digitRefs.rows[r][c][j].textContent !== valStr[j]) {
+                            digitRefs.rows[r][c][j].textContent = valStr[j];
+                        }
                     }
                 }
             }
