@@ -11,27 +11,33 @@
         }
         body { background: #000; margin: 0; padding: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #board { width: 98vw; max-height: 96vh; display: block; }
+        
         #status-dot { display: inline-block; width: 1.8vh; height: 1.8vh; background-color: #0f0; border-radius: 50%; margin-right: 1vh; vertical-align: middle; opacity: 0; transition: opacity 0.1s; box-shadow: 0 0 8px rgba(0, 255, 0, 0.8); }
         .dot-local { background-color: #0f0 !important; }
         .dot-cloud { background-color: #ffae00 !important; }
         .dot-error { background-color: #f00 !important; }
         .dot-active { opacity: 1 !important; }
+        
         #fs-btn { position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; background: #1a1a1a; color: #555; border: 1px solid #333; z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; opacity: 0.6; }
+        
         .row-container { width: 100%; margin-bottom: 1.5vh; } 
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         .group-wrap { display: flex; justify-content: center; width: 32%; }
+        
         .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: inline-block; width: 6vw; max-width: 65px; height: 9vh; margin: 0 0.5vw; }
         .top-digit-wrap { width: 4vw; max-width: 40px; height: 6vh; }
         .clock-colon-wrap { width: 2vw; max-width: 25px; height: 6vh; }
+        
         .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; }
         .digit { color: #ffae00; z-index: 2; font-size: 9vh; line-height: 9vh; text-shadow: 0 0 5px rgba(255, 174, 0, 0.5); }
         .digit-bg { color: #0a0800; z-index: 1; font-size: 9vh; line-height: 9vh; }
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 6vh; line-height: 6vh; }
         .clock-colon-wrap .digit { font-size: 5.5vh; line-height: 6vh; top: -0.5vh; }
 
+        /* Performance-friendly blink for Chromecast v1 */
         @-webkit-keyframes blinker { from { opacity: 1.0; } to { opacity: 0.0; } }
-        .blink { -webkit-animation-name: blinker; -webkit-animation-iteration-count: infinite; -webkit-animation-timing-function: cubic-bezier(1.0,0,0,1.0); -webkit-animation-duration: 1s; }
+        .blink { -webkit-animation: blinker 1s infinite cubic-bezier(1.0,0,0,1.0); }
     
         .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.2vh; }
         .label { font-size: 5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3vw; color: #CCC; width: 33%; text-align: center; display: block; white-space: nowrap; }
@@ -59,6 +65,18 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
+        // Ensure old Chrome/ES5 compatibility
+        if (!String.prototype.padStart) {
+            String.prototype.padStart = function(targetLength, padString) {
+                targetLength = targetLength >> 0;
+                padString = String(typeof padString !== 'undefined' ? padString : ' ');
+                if (this.length > targetLength) return String(this);
+                targetLength = targetLength - this.length;
+                if (targetLength > padString.length) padString += padString.repeat(targetLength / padString.length);
+                return padString.slice(0, targetLength) + String(this);
+            };
+        }
+
         function createDigitElement(isColon, isSmall) {
             var wrap = document.createElement('div');
             wrap.className = isColon ? 'clock-colon-wrap' : (isSmall ? 'top-digit-wrap' : 'cell');
@@ -69,6 +87,7 @@
             return wrap;
         }
 
+        // Initialize board
         var board = document.getElementById('board');
         var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
         for (var i = 0; i < ROWS.length; i++) {
@@ -76,15 +95,18 @@
         }
         board.innerHTML = boardHtml;
 
+        // Store references to the digits for fast updating
         var digitRefs = { b1: [], time: [], b2: [], rows: [] };
         var r0 = document.getElementById('row0');
         
-        // Setup Top Row 3-Group Structure
+        // Group 1: Batter 1
         var g1 = document.createElement('div'); g1.className = 'group-wrap';
         for(var i=0; i<2; i++) { var el = createDigitElement(false, true); g1.appendChild(el); digitRefs.b1.push(el.querySelector('.digit')); }
         r0.appendChild(g1);
 
+        // Group 2: Clock
         var gTime = document.createElement('div'); gTime.className = 'group-wrap';
+        var tChars = ['0','0',':','0','0'];
         for(var i=0; i<5; i++) { 
             var isColon = (i===2);
             var el = createDigitElement(isColon, true); gTime.appendChild(el); 
@@ -92,6 +114,7 @@
         }
         r0.appendChild(gTime);
 
+        // Group 3: Batter 2
         var g2 = document.createElement('div'); g2.className = 'group-wrap';
         for(var i=0; i<2; i++) { var el = createDigitElement(false, true); g2.appendChild(el); digitRefs.b2.push(el.querySelector('.digit')); }
         r0.appendChild(g2);
@@ -129,21 +152,25 @@
             var now = new Date();
             var tStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
             
+            // Update Top Groups
             for(var i=0; i<2; i++) { if(digitRefs.b1[i].textContent !== b1Str[i]) digitRefs.b1[i].textContent = b1Str[i]; }
             for(var i=0; i<2; i++) { if(digitRefs.b2[i].textContent !== b2Str[i]) digitRefs.b2[i].textContent = b2Str[i]; }
             for(var i=0; i<5; i++) {
-                if (digitRefs.time[i].isColon) continue;
+                if (digitRefs.time[i].isColon) continue; // Skip colon to let CSS handle blink
                 if (digitRefs.time[i].dom.textContent !== tStr[i]) digitRefs.time[i].dom.textContent = tStr[i];
             }
 
+            // Update Main Rows
             for (var r = 0; r < ROWS.length; r++) {
                 for (var c = 0; c < 3; c++) {
                     var labelText = ROWS[r][c][0];
                     var val = (vals[ROWS[r][c][1]] || "").toString().slice(-3).padStart(3, ' ');
                     var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
+                    
                     if (labelText === "Wickets") {
-                        if (!lbl.querySelector('#status-dot')) lbl.innerHTML = '<span id=\"status-dot\"></span>' + labelText;
+                        if (!lbl.querySelector('#status-dot')) lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
                     } else if (lbl.textContent !== labelText) { lbl.textContent = labelText; }
+                    
                     lbl.className = (val.trim() !== "") ? 'label' : 'label inactive';
                     for (var j = 0; j < 3; j++) {
                         if (digitRefs.rows[r][c][j].textContent !== val[j]) digitRefs.rows[r][c][j].textContent = val[j];
