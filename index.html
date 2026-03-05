@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scoreboard - Live</title>
+    <title>Scoreboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         @font-face { 
@@ -11,13 +11,7 @@
         }
         body { background: #000; margin: 0; padding: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
         
-        #board { width: 98vw; max-height: 92vh; display: block; opacity: 0; transition: opacity 0.5s ease-in; }
-        #board.ready { opacity: 1; }
-
-        /* Loading Overlay */
-        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #1a1a1a; border-top: 4px solid #ffae00; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #board { width: 98vw; max-height: 92vh; display: block; }
         
         #status-dot { display: inline-block; width: 1.8vh; height: 1.8vh; background-color: #0f0; border-radius: 50%; margin-right: 1vh; vertical-align: middle; opacity: 0; transition: opacity 0.1s; box-shadow: 0 0 8px rgba(0, 255, 0, 0.8); }
         .dot-local { background-color: #0f0 !important; }
@@ -45,7 +39,7 @@
         .clock-colon-wrap { width: 2vw; max-width: 20px; height: 6vh; margin: 0 0.2vw; }
         
         .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; }
-        .digit { color: #ffae00; z-index: 2; font-size: 9vh; line-height: 9vh; text-shadow: 0 0 5px rgba(255, 174, 0, 0.5); min-height: 1px; }
+        .digit { color: #ffae00; z-index: 2; font-size: 9vh; line-height: 9vh; text-shadow: 0 0 5px rgba(255, 174, 0, 0.5); }
         .digit-bg { color: #0a0800; z-index: 1; font-size: 9vh; line-height: 9vh; }
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 6vh; line-height: 6vh; }
         .clock-colon-wrap .digit { font-size: 5.5vh; line-height: 6vh; top: -0.5vh; }
@@ -66,15 +60,11 @@
             .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 18px !important; line-height: 22px !important; }
             .clock-colon-wrap { width: 8px !important; height: 22px !important; }
             .clock-colon-wrap .digit { font-size: 16px !important; line-height: 22px !important; }
+            #last-update { font-size: 10px; bottom: 10px; }
         }
     </style>
 </head>
 <body>
-    <div id="loader">
-        <div class="spinner"></div>
-        <div style="color: #555; letter-spacing: 2px; font-size: 12px;">SYNCING SCOREBOARD</div>
-    </div>
-
     <button id="fs-btn">⛶</button>
     <div id="board"></div>
     <div id="last-update">CONNECTING...</div>
@@ -88,7 +78,6 @@
         var pollTimer = null;
         var currentInterval = LOCAL_SPEED;
         var isUsingLocal = true;
-        var firstLoadDone = false;
 
         var ROWS = [
             [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
@@ -97,7 +86,6 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        // Polyfill
         if (!String.prototype.padStart) {
             String.prototype.padStart = function(targetLength, padString) {
                 targetLength = targetLength >> 0;
@@ -119,13 +107,26 @@
             return wrap;
         }
 
-        // Initialize Structure
+        // --- IMMEDIATE INITIALIZATION ---
         var board = document.getElementById('board');
         var boardHtml = '<div class="row-container"><div id="row0" class="top-row-grid"></div></div>';
         for (var i = 0; i < ROWS.length; i++) {
-            boardHtml += '<div class="row-container"><div class="label-row"><div id="lbl-'+(i+1)+'-0" class="label"></div><div id="lbl-'+(i+1)+'-1" class="label"></div><div id="lbl-'+(i+1)+'-2" class="label"></div></div><div id="row'+(i+1)+'" class="digit-row"></div></div>';
+            boardHtml += '<div class="row-container"><div class="label-row"><div id="lbl-'+(i+1)+'-0" class="label inactive"></div><div id="lbl-'+(i+1)+'-1" class="label inactive"></div><div id="lbl-'+(i+1)+'-2" class="label inactive"></div></div><div id="row'+(i+1)+'" class="digit-row"></div></div>';
         }
         board.innerHTML = boardHtml;
+
+        // Draw Labels Immediately
+        for (var r = 0; r < ROWS.length; r++) {
+            for (var c = 0; c < 3; c++) {
+                var labelText = ROWS[r][c][0];
+                var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
+                if (labelText === "Wickets") {
+                    lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
+                } else {
+                    lbl.textContent = labelText;
+                }
+            }
+        }
 
         var digitRefs = { b1: [], time: [], b2: [], rows: [] };
         var r0 = document.getElementById('row0');
@@ -176,12 +177,8 @@
 
             for (var r = 0; r < ROWS.length; r++) {
                 for (var c = 0; c < 3; c++) {
-                    var labelText = ROWS[r][c][0];
                     var val = (vals[ROWS[r][c][1]] || "").toString().slice(-3).padStart(3, ' ');
                     var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
-                    if (labelText === "Wickets") {
-                        if (!lbl.querySelector('#status-dot')) lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
-                    } else if (lbl.textContent !== labelText) { lbl.textContent = labelText; }
                     lbl.className = (val.trim() !== "") ? 'label' : 'label inactive';
                     for (var j = 0; j < 3; j++) {
                         if (digitRefs.rows[r][c][j].textContent !== val[j]) digitRefs.rows[r][c][j].textContent = val[j];
@@ -190,13 +187,6 @@
             }
             var ts = "Updated: " + now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0') + ":" + now.getSeconds().toString().padStart(2, '0');
             document.getElementById('last-update').textContent = ts;
-
-            // Hide loader on first successful render
-            if (!firstLoadDone) {
-                firstLoadDone = true;
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('board').classList.add('ready');
-            }
         }
 
         function updateScore() {
