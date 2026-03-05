@@ -24,10 +24,11 @@
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         
-        /* Fixed spacing for top row groups */
-        .top-row-grid .group-wrap { width: auto; flex: 1; display: flex; justify-content: center; }
-        .top-row-grid .group-wrap:first-child { justify-content: flex-start; }
-        .top-row-grid .group-wrap:last-child { justify-content: flex-end; }
+        /* Fixed spacing for top row to prevent "Huge Clock" */
+        .top-row-grid .group-wrap { width: auto; flex: 1; display: flex; }
+        .top-row-grid .group-wrap:nth-child(1) { justify-content: flex-start; }
+        .top-row-grid .group-wrap:nth-child(2) { justify-content: center; }
+        .top-row-grid .group-wrap:nth-child(3) { justify-content: flex-end; }
         
         .group-wrap { display: flex; justify-content: center; width: 32%; }
         
@@ -41,7 +42,7 @@
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 6vh; line-height: 6vh; }
         .clock-colon-wrap .digit { font-size: 5.5vh; line-height: 6vh; top: -0.5vh; }
 
-        /* Performance-friendly blink for Chromecast v1 */
+        /* Hardware-accelerated blink for old Chromecasts */
         @-webkit-keyframes blinker { from { opacity: 1.0; } to { opacity: 0.0; } }
         .blink { -webkit-animation: blinker 1s infinite cubic-bezier(1.0,0,0,1.0); }
     
@@ -71,6 +72,7 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
+        // ES5 padStart Polyfill
         if (!String.prototype.padStart) {
             String.prototype.padStart = function(targetLength, padString) {
                 targetLength = targetLength >> 0;
@@ -102,10 +104,12 @@
         var digitRefs = { b1: [], time: [], b2: [], rows: [] };
         var r0 = document.getElementById('row0');
         
+        // Group 1: Batter 1
         var g1 = document.createElement('div'); g1.className = 'group-wrap';
         for(var i=0; i<2; i++) { var el = createDigitElement(false, true); g1.appendChild(el); digitRefs.b1.push(el.querySelector('.digit')); }
         r0.appendChild(g1);
 
+        // Group 2: Clock
         var gTime = document.createElement('div'); gTime.className = 'group-wrap';
         for(var i=0; i<5; i++) { 
             var isColon = (i===2);
@@ -114,10 +118,12 @@
         }
         r0.appendChild(gTime);
 
+        // Group 3: Batter 2
         var g2 = document.createElement('div'); g2.className = 'group-wrap';
         for(var i=0; i<2; i++) { var el = createDigitElement(false, true); g2.appendChild(el); digitRefs.b2.push(el.querySelector('.digit')); }
         r0.appendChild(g2);
 
+        // Setup Main Rows
         for (var r = 0; r < ROWS.length; r++) {
             var rowEl = document.getElementById('row' + (r + 1));
             digitRefs.rows[r] = [];
@@ -148,9 +154,7 @@
             var b1Str = (vals[0] || "").toString().padStart(2, ' ');
             var b2Str = (vals[1] || "").toString().padStart(2, ' ');
             var now = new Date();
-            var hours = now.getHours().toString().padStart(2, '0');
-            var mins = now.getMinutes().toString().padStart(2, '0');
-            var tStr = hours + ":" + mins;
+            var tStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
             
             for(var i=0; i<2; i++) { if(digitRefs.b1[i].textContent !== b1Str[i]) digitRefs.b1[i].textContent = b1Str[i]; }
             for(var i=0; i<2; i++) { if(digitRefs.b2[i].textContent !== b2Str[i]) digitRefs.b2[i].textContent = b2Str[i]; }
