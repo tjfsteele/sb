@@ -11,120 +11,42 @@
             font-style: normal;
         }
         
-        body { 
-            background: #000; 
-            margin: 0; 
-            padding: 0; 
-            font-family: Arial, sans-serif; 
-            color: white; 
-            overflow: hidden; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-        }
-    
-        #board { 
-            width: 98vw; 
-            max-height: 96vh; 
-            display: block;
-        }
-        
-        #status-dot { 
-            display: inline-block; 
-            width: 1.8vh; 
-            height: 1.8vh; 
-            background-color: #0f0; 
-            border-radius: 50%; 
-            margin-right: 1vh; 
-            vertical-align: middle; 
-            opacity: 0; 
-            transition: opacity 0.1s; 
-            box-shadow: 0 0 8px rgba(0, 255, 0, 0.8); 
-        }
-        .dot-local { background-color: #0f0 !important; box-shadow: 0 0 8px rgba(0, 255, 0, 0.8) !important; }
-        .dot-cloud { background-color: #ffae00 !important; box-shadow: 0 0 8px rgba(255, 174, 0, 0.8) !important; }
-        .dot-error { background-color: #f00 !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8) !important; }
+        body { background: #000; margin: 0; padding: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #board { width: 98vw; max-height: 96vh; display: block; }
+        #status-dot { display: inline-block; width: 1.8vh; height: 1.8vh; background-color: #0f0; border-radius: 50%; margin-right: 1vh; vertical-align: middle; opacity: 0; transition: opacity 0.1s; box-shadow: 0 0 8px rgba(0, 255, 0, 0.8); }
+        .dot-local { background-color: #0f0 !important; }
+        .dot-cloud { background-color: #ffae00 !important; }
+        .dot-error { background-color: #f00 !important; }
         .dot-active { opacity: 1 !important; }
-        
-        #fs-btn { 
-            position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; 
-            background: #1a1a1a; color: #555; border: 1px solid #333; 
-            z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; 
-            opacity: 0.6;
-        }
-        
+        #fs-btn { position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; background: #1a1a1a; color: #555; border: 1px solid #333; z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; opacity: 0.6; }
         .row-container { width: 100%; margin-bottom: 1.5vh; } 
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
         .group-wrap { display: flex; justify-content: center; width: 32%; }
-        
-        .cell, .top-digit-wrap, .clock-colon-wrap { 
-            position: relative; 
-            display: inline-block; 
-            width: 6vw; 
-            max-width: 65px;
-            height: 9vh; 
-            margin: 0 0.5vw; 
-        }
-        
+        .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: inline-block; width: 6vw; max-width: 65px; height: 9vh; margin: 0 0.5vw; }
         .top-digit-wrap { width: 4vw; max-width: 40px; height: 6vh; }
         .clock-colon-wrap { width: 2vw; max-width: 25px; height: 6vh; }
-    
-        .digit, .digit-bg { 
-            font-family: 'DSEG7'; 
-            position: absolute; 
-            left: 0; 
-            width: 100%; 
-            text-align: center; 
-        }
-    
-        .digit { 
-            color: #ffae00;
-            z-index: 2; 
-            font-size: 9vh; 
-            line-height: 9vh; 
-            will-change: transform, opacity;
-            text-shadow: 0 0 5px rgba(255, 174, 0, 0.5), 0 0 2px rgba(255, 255, 255, 0.2);
-        }
-    
+        .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; }
+        .digit { color: #ffae00; z-index: 2; font-size: 9vh; line-height: 9vh; text-shadow: 0 0 5px rgba(255, 174, 0, 0.5); }
         .digit-bg { color: #0a0800; z-index: 1; font-size: 9vh; line-height: 9vh; }
-    
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 6vh; line-height: 6vh; }
         .clock-colon-wrap .digit { font-size: 5.5vh; line-height: 6vh; top: -0.5vh; }
 
-        /* GPU-Accelerated Blink for Chromecast v1 */
-        @keyframes blink {
-            0%, 49% { opacity: 1; }
-            50%, 100% { opacity: 0; }
+        /* Simplified Blink for older Webkit (Chromecast v1) */
+        @-webkit-keyframes blinker {
+            from { opacity: 1.0; }
+            to { opacity: 0.0; }
         }
-        .blink { animation: blink 1s infinite; will-change: opacity; }
+        .blink {
+            -webkit-animation-name: blinker;
+            -webkit-animation-iteration-count: infinite;
+            -webkit-animation-timing-function: cubic-bezier(1.0,0,0,1.0);
+            -webkit-animation-duration: 1s;
+        }
     
         .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.2vh; }
-        .label { 
-            font-size: 5vh; 
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.3vw;
-            color: #CCC;
-            width: 33%;
-            text-align: center;
-            display: block;
-            white-space: nowrap;
-        }
+        .label { font-size: 5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3vw; color: #CCC; width: 33%; text-align: center; display: block; white-space: nowrap; }
         .label.inactive { color: #111; }
-        
-        @media (max-width: 600px) {
-            #board { width: 100vw; }
-            .top-row-grid { width: 95vw; margin: 0 auto 10px auto; }
-            .label { font-size: 16px !important; letter-spacing: 0.5px !important; }
-            .digit, .digit-bg { font-size: 32px !important; line-height: 32px !important; }
-            .cell { height: 32px !important; width: 22px !important; margin: 0 1px !important; }
-            .top-digit-wrap { height: 22px !important; width: 15px !important; margin: 0 1px !important; }
-            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 20px !important; line-height: 22px !important; }
-            .clock-colon-wrap { width: 8px !important; }
-            .clock-colon-wrap .digit { font-size: 18px !important; line-height: 22px !important; }
-        }
     </style>
 </head>
 <body>
@@ -135,10 +57,8 @@
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
         var LOCAL_URL = "http://192.168.137.1/"; 
         var NPOINT_URL = 'https://api.npoint.io/' + NPOINT_ID;
-        
         var LOCAL_SPEED = 1000;
         var CLOUD_SPEED = 5000;
-        
         var pollTimer = null;
         var currentInterval = LOCAL_SPEED;
         var isUsingLocal = true;
@@ -150,25 +70,13 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
-        if (!String.prototype.padStart) {
-            String.prototype.padStart = function(targetLength, padString) {
-                targetLength = targetLength >> 0;
-                padString = String(typeof padString !== 'undefined' ? padString : ' ');
-                if (this.length > targetLength) return String(this);
-                targetLength = targetLength - this.length;
-                if (targetLength > padString.length) padString += padString.repeat(targetLength / padString.length);
-                return padString.slice(0, targetLength) + String(this);
-            };
-        }
-
-        function createDigitElement(isColon, isSmall, shouldBlink) {
+        function createDigitElement(isColon, isSmall) {
             var wrap = document.createElement('div');
             wrap.className = isColon ? 'clock-colon-wrap' : (isSmall ? 'top-digit-wrap' : 'cell');
             var bg = document.createElement('div'); bg.className = 'digit-bg'; bg.innerHTML = isColon ? ':' : '8';
             var fg = document.createElement('div'); fg.className = 'digit'; 
-            if (shouldBlink) fg.className += ' blink';
-            // Store a flag on the element so we know it's a colon later
-            if (isColon) wrap.dataset.isColon = "true";
+            if (isColon) fg.className += ' blink'; // Add blink class immediately
+            fg.innerHTML = isColon ? ':' : ' ';
             wrap.appendChild(bg); wrap.appendChild(fg);
             return wrap;
         }
@@ -181,16 +89,12 @@
         board.innerHTML = boardHtml;
 
         var digitRefs = { top: [], rows: [] };
-        
         var r0 = document.getElementById('row0');
         for(var i=0; i<7; i++) { 
             var isColon = (i === 3);
-            var el = createDigitElement(isColon, true, isColon);
+            var el = createDigitElement(isColon, true);
             r0.appendChild(el);
-            digitRefs.top.push({
-                dom: el.querySelector('.digit'),
-                isColon: isColon
-            });
+            digitRefs.top.push({ dom: el.querySelector('.digit'), isColon: isColon });
         }
 
         for (var r = 0; r < ROWS.length; r++) {
@@ -200,7 +104,7 @@
                 var gWrap = document.createElement('div'); gWrap.className = 'group-wrap';
                 digitRefs.rows[r][c] = [];
                 for (var j = 0; j < 3; j++) {
-                    var el = createDigitElement(false, false, false);
+                    var el = createDigitElement(false, false);
                     gWrap.appendChild(el);
                     digitRefs.rows[r][c].push(el.querySelector('.digit'));
                 }
@@ -223,38 +127,50 @@
             var b1 = (vals[0] || "").toString().padStart(2, ' ');
             var b2 = (vals[1] || "").toString().padStart(2, ' ');
             var now = new Date();
-            var timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            var topStr = b1 + timeStr + b2;
+            var h = now.getHours().toString().padStart(2, '0');
+            var m = now.getMinutes().toString().padStart(2, '0');
+            // We build the string but exclude colon for the update check
+            var topStr = b1 + " " + m + b2; // Space placeholder for colon position
             
-            for(var i=0; i<topStr.length; i++) {
-                // FIX: If it's a colon, we DON'T update the textContent. 
-                // This lets the CSS animation run without being interrupted.
-                if (digitRefs.top[i].isColon) continue; 
+            // Only update batter digits and minutes; leave the colon alone
+            for(var i=0; i<7; i++) {
+                if (digitRefs.top[i].isColon) {
+                    // Force text to colon once if it somehow got wiped, then skip
+                    if (digitRefs.top[i].dom.textContent !== ":") digitRefs.top[i].dom.textContent = ":";
+                    continue; 
+                }
                 
-                if (digitRefs.top[i].dom.textContent !== topStr[i]) {
-                    digitRefs.top[i].dom.textContent = topStr[i];
+                // For the hour (index 2) and minutes (index 4,5), use the time string
+                var charToSet = (i < 2) ? b1[i] : (i === 2) ? h[0] : (i === 4) ? h[1] : (i === 5) ? m[0] : (i === 6) ? m[1] : b2[i-5];
+                // Wait, batter 2 logic: top string is [B1][B1][H][:][H][M][M][B2][B2]
+                // Let's simplify the index mapping:
+                var mapping = [b1[0], b1[1], h[0], ':', h[1], m[0], m[1], b2[0], b2[1]];
+                // Since our top row actually has 7 slots in the code: [B1][B1] [TIME] [B2][B2]
+                // Let's re-map based on how many elements were actually created (7)
+                // 0,1 = Batter 1 | 2,3,4 = Time | 5,6 = Batter 2
+                var finalMap = [b1[0], b1[1], h, ":", m, b2[0], b2[1]];
+                
+                if (digitRefs.top[i].dom.textContent !== finalMap[i]) {
+                    digitRefs.top[i].dom.textContent = finalMap[i];
                 }
             }
 
             for (var r = 0; r < ROWS.length; r++) {
                 for (var c = 0; c < 3; c++) {
                     var labelText = ROWS[r][c][0];
-                    var val = vals[ROWS[r][c][1]];
+                    var val = (vals[ROWS[r][c][1]] || "").toString().slice(-3).padStart(3, ' ');
                     var lbl = document.getElementById('lbl-' + (r+1) + '-' + c);
 
                     if (labelText === "Wickets") {
                         if (!lbl.querySelector('#status-dot')) lbl.innerHTML = '<span id="status-dot"></span>' + labelText;
-                    } else { 
-                        if (lbl.textContent !== labelText) lbl.textContent = labelText; 
+                    } else if (lbl.textContent !== labelText) {
+                        lbl.textContent = labelText;
                     }
 
-                    var active = (val !== null && val !== undefined && val.toString().trim() !== "");
-                    lbl.className = active ? 'label' : 'label inactive';
-                    
-                    var valStr = (val || "").toString().slice(-3).padStart(3, ' ');
+                    lbl.className = (val.trim() !== "") ? 'label' : 'label inactive';
                     for (var j = 0; j < 3; j++) {
-                        if (digitRefs.rows[r][c][j].textContent !== valStr[j]) {
-                            digitRefs.rows[r][c][j].textContent = valStr[j];
+                        if (digitRefs.rows[r][c][j].textContent !== val[j]) {
+                            digitRefs.rows[r][c][j].textContent = val[j];
                         }
                     }
                 }
@@ -270,8 +186,7 @@
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
                         try {
-                            var vals = JSON.parse(xhr.responseText);
-                            renderBoard(vals);
+                            renderBoard(JSON.parse(xhr.responseText));
                             flashStatus(isUsingLocal ? 'local' : 'cloud');
                         } catch (e) { flashStatus('error'); }
                     } else if (isUsingLocal) {
@@ -281,9 +196,7 @@
                     }
                 }
             };
-            xhr.onerror = function() { 
-                if (isUsingLocal) { isUsingLocal = false; switchInterval(CLOUD_SPEED); }
-            };
+            xhr.onerror = function() { if (isUsingLocal) { isUsingLocal = false; switchInterval(CLOUD_SPEED); } };
             xhr.send();
         }
 
@@ -297,7 +210,6 @@
 
         pollTimer = setInterval(updateScore, currentInterval);
         updateScore();
-
         document.getElementById('fs-btn').onclick = function() {
             var el = document.documentElement;
             var rfs = el.requestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
