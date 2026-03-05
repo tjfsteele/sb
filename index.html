@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scoreboard</title>
+    <title>Scoreboard - Live</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         @font-face { 
@@ -21,7 +21,7 @@
         
         #fs-btn { position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; background: #1a1a1a; color: #555; border: 1px solid #333; z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; opacity: 0.6; }
         
-        #last-update { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: #444; font-size: 1.8vh; letter-spacing: 1px; text-transform: uppercase; }
+        #last-update { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: #333; font-size: 1.8vh; letter-spacing: 1px; text-transform: uppercase; }
 
         .row-container { width: 100%; margin-bottom: 1.5vh; } 
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
@@ -162,18 +162,26 @@
             }
         }
 
-        function renderBoard(vals) {
-            var b1Str = (vals[0] || "").toString().padStart(2, ' ');
-            var b2Str = (vals[1] || "").toString().padStart(2, ' ');
+        // --- CLOCK ONLY UPDATE (Runs immediately) ---
+        function updateClockOnly() {
             var now = new Date();
             var tStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            
-            for(var i=0; i<2; i++) { if(digitRefs.b1[i].textContent !== b1Str[i]) digitRefs.b1[i].textContent = b1Str[i]; }
-            for(var i=0; i<2; i++) { if(digitRefs.b2[i].textContent !== b2Str[i]) digitRefs.b2[i].textContent = b2Str[i]; }
             for(var i=0; i<5; i++) {
                 if (digitRefs.time[i].isColon) continue; 
                 if (digitRefs.time[i].dom.textContent !== tStr[i]) digitRefs.time[i].dom.textContent = tStr[i];
             }
+        }
+
+        function renderBoard(vals) {
+            var b1Str = (vals[0] || "").toString().padStart(2, ' ');
+            var b2Str = (vals[1] || "").toString().padStart(2, ' ');
+            
+            // Update Batter numbers
+            for(var i=0; i<2; i++) { if(digitRefs.b1[i].textContent !== b1Str[i]) digitRefs.b1[i].textContent = b1Str[i]; }
+            for(var i=0; i<2; i++) { if(digitRefs.b2[i].textContent !== b2Str[i]) digitRefs.b2[i].textContent = b2Str[i]; }
+            
+            // Run the clock update
+            updateClockOnly();
 
             for (var r = 0; r < ROWS.length; r++) {
                 for (var c = 0; c < 3; c++) {
@@ -185,8 +193,10 @@
                     }
                 }
             }
+            var now = new Date();
             var ts = "Updated: " + now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0') + ":" + now.getSeconds().toString().padStart(2, '0');
             document.getElementById('last-update').textContent = ts;
+            document.getElementById('last-update').style.color = "#777"; // Make it more readable once updated
         }
 
         function updateScore() {
@@ -225,8 +235,13 @@
             setTimeout(function() { dot.classList.remove('dot-active'); }, 500);
         }
 
+        // Initialize clock immediately
+        updateClockOnly();
+        
+        // Start polling
         pollTimer = setInterval(updateScore, currentInterval);
         updateScore();
+
         document.getElementById('fs-btn').onclick = function() {
             var el = document.documentElement;
             var rfs = el.requestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
