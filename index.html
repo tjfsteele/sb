@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scoreboard</title>
+    <title>Scoreboard - Live</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @font-face { 
@@ -33,17 +33,21 @@
         .label { font-size: 4.5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2vw; color: #CCC; width: 33%; text-align: center; white-space: nowrap; }
         .label.inactive { color: #111; }
 
-        /* Smaller Status Dot */
+        /* Robust Status Dot sizing */
         #status-dot { 
             display: inline-block; 
-            width: 1vh; 
-            height: 1vh; 
+            width: 0.8vh; 
+            height: 0.8vh; 
+            max-width: 8px;   /* Cap for high-aspect ratio mobile screens */
+            max-height: 8px;  /* Cap for high-aspect ratio mobile screens */
+            min-width: 4px; 
+            min-height: 4px;
             background-color: #0f0; 
             border-radius: 50%; 
             margin-right: 0.8vh; 
             opacity: 0; 
-            vertical-align: 15%; /* Aligns tiny dot better with text height */
-            box-shadow: 0 0 4px rgba(0, 255, 0, 0.6); 
+            vertical-align: middle;
+            box-shadow: 0 0 3px rgba(0, 255, 0, 0.5); 
         }
         .dot-local { background-color: #0f0 !important; }
         .dot-cloud { background-color: #ffae00 !important; }
@@ -55,7 +59,7 @@
 
         @media (max-width: 600px) {
             .label { font-size: 14px !important; }
-            #status-dot { width: 6px; height: 6px; margin-right: 4px; }
+            #status-dot { width: 5px; height: 5px; margin-right: 5px; vertical-align: 1px; }
             .digit, .digit-bg { font-size: 30px !important; line-height: 32px !important; }
             .cell { height: 32px !important; width: 22px !important; margin: 0 2px !important; }
             .top-digit-wrap { height: 22px !important; width: 16px !important; margin: 0 3px !important; }
@@ -85,6 +89,7 @@
             [["To Win", 11], ["Last Wkt", 9], ["DLS Par", 13]]
         ];
 
+        // Polyfill
         if (!String.prototype.padStart) {
             String.prototype.padStart = function(t, p) {
                 t = t >> 0; p = String(p || ' ');
