@@ -10,174 +10,154 @@
             font-weight: 700; font-style: normal;
         }
         body { background: #000; margin: 0; padding: 0; font-family: Arial, sans-serif; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
-        
         #board { width: 98vw; max-height: 92vh; display: block; }
-        
-        #status-dot { display: inline-block; width: 1.8vh; height: 1.8vh; background-color: #0f0; border-radius: 50%; margin-right: 1vh; vertical-align: middle; opacity: 0; transition: opacity 0.1s; box-shadow: 0 0 8px rgba(0, 255, 0, 0.8); }
-        .dot-local { background-color: #0f0 !important; }
-        .dot-cloud { background-color: #ffae00 !important; }
-        .dot-error { background-color: #f00 !important; }
-        .dot-active { opacity: 1 !important; }
-        
-        #fs-btn { position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; background: #1a1a1a; color: #555; border: 1px solid #333; z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; opacity: 0.6; }
-        
-        #last-update { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: #444; font-size: 1.8vh; letter-spacing: 1px; text-transform: uppercase; }
-
         .row-container { width: 100%; margin-bottom: 1.5vh; } 
         .top-row-grid { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1.5vh; }
         .digit-row { display: flex; width: 100%; justify-content: space-between; }
-        
         .group-wrap { display: flex; justify-content: center; width: 32%; }
         .top-row-grid .group-wrap { width: auto; flex: 1; }
-        .top-row-grid .group-wrap:nth-child(1) { justify-content: flex-start; }
-        .top-row-grid .group-wrap:nth-child(2) { justify-content: center; }
-        .top-row-grid .group-wrap:nth-child(3) { justify-content: flex-end; }
-        
         .cell, .top-digit-wrap, .clock-colon-wrap { position: relative; display: inline-block; width: 6vw; max-width: 65px; height: 9vh; margin: 0 0.5vw; }
         .top-digit-wrap { width: 4vw; max-width: 40px; height: 6vh; }
         .clock-colon-wrap { width: 2vw; max-width: 20px; height: 6vh; margin: 0 0.2vw; }
-        
-        .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; min-height: 1em; }
+        .digit, .digit-bg { font-family: 'DSEG7'; position: absolute; left: 0; width: 100%; text-align: center; }
         .digit { color: #ffae00; z-index: 2; font-size: 9vh; line-height: 9vh; text-shadow: 0 0 5px rgba(255, 174, 0, 0.5); }
         .digit-bg { color: #0a0800; z-index: 1; font-size: 9vh; line-height: 9vh; }
         .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 6vh; line-height: 6vh; }
         .clock-colon-wrap .digit { font-size: 5.5vh; line-height: 6vh; top: -0.5vh; }
-
-        @-webkit-keyframes blinker { from { opacity: 1.0; } to { opacity: 0.0; } }
-        .blink { -webkit-animation: blinker 1s infinite cubic-bezier(1.0,0,0,1.0); }
-    
+        .blink { animation: blinker 1s infinite step-start; }
+        @keyframes blinker { 50% { opacity: 0; } }
         .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.2vh; }
-        .label { font-size: 5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3vw; color: #CCC; width: 33%; text-align: center; display: block; white-space: nowrap; }
+        .label { font-size: 5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3vw; color: #CCC; width: 33%; text-align: center; white-space: nowrap; }
         .label.inactive { color: #111; }
-
+        #status-dot { display: inline-block; width: 1.8vh; height: 1.8vh; background-color: #0f0; border-radius: 50%; margin-right: 1vh; opacity: 0; transition: opacity 0.1s; box-shadow: 0 0 8px rgba(0, 255, 0, 0.8); }
+        .dot-local { background-color: #0f0 !important; }
+        .dot-cloud { background-color: #ffae00 !important; }
+        .dot-error { background-color: #f00 !important; }
+        .dot-active { opacity: 1 !important; }
+        #fs-btn { position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; background: #1a1a1a; color: #555; border: 1px solid #333; z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; opacity: 0.6; }
+        #last-update { position: fixed; bottom: 20px; color: #444; font-size: 1.8vh; text-transform: uppercase; }
         @media (max-width: 600px) {
             .label { font-size: 14px !important; }
             .digit, .digit-bg { font-size: 32px !important; line-height: 32px !important; }
             .cell { height: 32px !important; width: 22px !important; }
             .top-digit-wrap { height: 22px !important; width: 15px !important; }
-            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 18px !important; line-height: 22px !important; }
-            #last-update { font-size: 10px; }
         }
     </style>
 </head>
 <body>
     <button id="fs-btn">⛶</button>
-    <div id="board">
-        </div>
+    <div id="board"></div>
     <div id="last-update">INITIALIZING...</div>
 
     <script>
+        // Config
         var NPOINT_ID = "e5ab2c288d26e7ce23ca";
         var LOCAL_URL = "http://192.168.137.1/"; 
         var NPOINT_URL = 'https://api.npoint.io/' + NPOINT_ID;
+        var LOCAL_SPEED = 1000;
+        var CLOUD_SPEED = 5000;
+        var isUsingLocal = true;
+        var currentInterval = LOCAL_SPEED;
+
         var ROWS = [
-            [["Batter", 2],   ["Total", 4],   ["Batter", 3]],
-            [["Extras", 7],   ["Wickets", 5], ["Overs", 6]],
-            [["1st Inns", 10],["Last Man", 8],["Overs Rem", 12]],
-            [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
+            [["Batter", 2], ["Total", 4], ["Batter", 3]],
+            [["Extras", 7], ["Wickets", 5], ["Overs", 6]],
+            [["1st Inns", 10], ["Last Man", 8], ["Overs Rem", 12]],
+            [["To Win", 11], ["Last Wkt", 9], ["DLS Par", 13]]
         ];
 
-        var digitRefs = { b1: [], time: [], b2: [], rows: [] };
-
-        function createDigit(parent, isColon, isSmall) {
-            var wrap = document.createElement('div');
-            wrap.className = isColon ? 'clock-colon-wrap' : (isSmall ? 'top-digit-wrap' : 'cell');
-            wrap.innerHTML = '<div class="digit-bg">' + (isColon ? ':' : '8') + '</div><div class="digit' + (isColon ? ' blink' : '') + '">' + (isColon ? ':' : '') + '</div>';
-            parent.appendChild(wrap);
-            return wrap.querySelector('.digit');
+        // Polyfill
+        if (!String.prototype.padStart) {
+            String.prototype.padStart = function(t, p) {
+                t = t >> 0; p = String(p || ' ');
+                if (this.length > t) return String(this);
+                t = t - this.length;
+                if (t > p.length) p += p.repeat(t / p.length);
+                return p.slice(0, t) + String(this);
+            };
         }
 
-        // Build UI
-        var board = document.getElementById('board');
-        var r0 = document.createElement('div'); r0.className = 'row-container';
-        r0.innerHTML = '<div class="top-row-grid" id="row0"></div>';
-        board.appendChild(r0);
-        var r0Grid = document.getElementById('row0');
+        var refs = { time: [], b1: [], b2: [], rows: [] };
 
-        // Top Row Setup
-        var g1 = document.createElement('div'); g1.className = 'group-wrap';
-        digitRefs.b1.push(createDigit(g1, false, true), createDigit(g1, false, true));
-        r0Grid.appendChild(g1);
+        function cDig(p, isC, isS) {
+            var w = document.createElement('div');
+            w.className = isC ? 'clock-colon-wrap' : (isS ? 'top-digit-wrap' : 'cell');
+            w.innerHTML = '<div class="digit-bg">'+(isC?':':'8')+'</div><div class="digit'+(isC?' blink':'')+'">'+(isC?':':'')+'</div>';
+            p.appendChild(w);
+            return w.querySelector('.digit');
+        }
 
-        var gT = document.createElement('div'); gT.className = 'group-wrap';
-        digitRefs.time.push({d: createDigit(gT, false, true), c: false});
-        digitRefs.time.push({d: createDigit(gT, false, true), c: false});
-        digitRefs.time.push({d: createDigit(gT, true, true),  c: true});
-        digitRefs.time.push({d: createDigit(gT, false, true), c: false});
-        digitRefs.time.push({d: createDigit(gT, false, true), c: false});
-        r0Grid.appendChild(gT);
+        function initUI() {
+            var board = document.getElementById('board');
+            var r0 = document.createElement('div'); r0.className = 'top-row-grid';
+            var g1 = document.createElement('div'); g1.className = 'group-wrap';
+            refs.b1 = [cDig(g1,0,1), cDig(g1,0,1)];
+            var gT = document.createElement('div'); gT.className = 'group-wrap';
+            refs.time = [cDig(gT,0,1), cDig(gT,0,1), cDig(gT,1,1), cDig(gT,0,1), cDig(gT,0,1)];
+            var g2 = document.createElement('div'); g2.className = 'group-wrap';
+            refs.b2 = [cDig(g2,0,1), cDig(g2,0,1)];
+            r0.appendChild(g1); r0.appendChild(gT); r0.appendChild(g2);
+            board.appendChild(r0);
 
-        var g2 = document.createElement('div'); g2.className = 'group-wrap';
-        digitRefs.b2.push(createDigit(g2, false, true), createDigit(g2, false, true));
-        r0Grid.appendChild(g2);
-
-        // Grid Rows Setup
-        for (var r = 0; r < ROWS.length; r++) {
-            var cont = document.createElement('div'); cont.className = 'row-container';
-            cont.innerHTML = '<div class="label-row"><div class="label" id="l-'+r+'-0"></div><div class="label" id="l-'+r+'-1"></div><div class="label" id="l-'+r+'-2"></div></div><div class="digit-row" id="r-'+r+'"></div>';
-            board.appendChild(cont);
-            digitRefs.rows[r] = [];
-            var dRow = document.getElementById('r-'+r);
-            for (var c = 0; c < 3; c++) {
-                var lbl = document.getElementById('l-'+r+'-c'); // Dummy
-                var labelText = ROWS[r][c][0];
-                var labelEl = document.getElementById('l-'+r+'-'+c);
-                if (labelText === "Wickets") labelEl.innerHTML = '<span id="status-dot"></span>Wickets';
-                else labelEl.textContent = labelText;
-                labelEl.className = 'label inactive';
-
-                var g = document.createElement('div'); g.className = 'group-wrap';
-                digitRefs.rows[r][c] = [createDigit(g, false, false), createDigit(g, false, false), createDigit(g, false, false)];
-                dRow.appendChild(g);
+            for (var r=0; r<4; r++) {
+                var cont = document.createElement('div'); cont.className = 'row-container';
+                var lRow = document.createElement('div'); lRow.className = 'label-row';
+                var dRow = document.createElement('div'); dRow.className = 'digit-row';
+                refs.rows[r] = [];
+                for (var c=0; c<3; c++) {
+                    var lbl = document.createElement('div');
+                    lbl.className = 'label inactive'; lbl.id = 'l-'+r+'-'+c;
+                    lbl.innerHTML = (ROWS[r][c][0] === "Wickets") ? '<span id="status-dot"></span>Wickets' : ROWS[r][c][0];
+                    lRow.appendChild(lbl);
+                    var g = document.createElement('div'); g.className = 'group-wrap';
+                    refs.rows[r][c] = [cDig(g,0,0), cDig(g,0,0), cDig(g,0,0)];
+                    dRow.appendChild(g);
+                }
+                cont.appendChild(lRow); cont.appendChild(dRow);
+                board.appendChild(cont);
             }
+            tickClock();
         }
 
-        function updateClock() {
+        function tickClock() {
             var d = new Date();
-            var s = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
-            for(var i=0; i<5; i++) {
-                if(!digitRefs.time[i].c && digitRefs.time[i].d.textContent !== s[i]) digitRefs.time[i].d.textContent = s[i];
-            }
+            var s = d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2,'0');
+            for(var i=0; i<5; i++) if(i !== 2) refs.time[i].textContent = s[i];
         }
 
         function render(vals) {
-            updateClock();
-            var b1s = (vals[0] || "").toString().padStart(2, ' ');
-            var b2s = (vals[1] || "").toString().padStart(2, ' ');
-            for(var i=0; i<2; i++) { 
-                if(digitRefs.b1[i].textContent !== b1s[i]) digitRefs.b1[i].textContent = b1s[i];
-                if(digitRefs.b2[i].textContent !== b2s[i]) digitRefs.b2[i].textContent = b2s[i];
-            }
-            for (var r = 0; r < ROWS.length; r++) {
-                for (var c = 0; c < 3; c++) {
-                    var v = (vals[ROWS[r][c][1]] || "").toString().slice(-3).padStart(3, ' ');
-                    document.getElementById('l-'+r+'-'+c).className = (v.trim() !== "") ? 'label' : 'label inactive';
-                    for (var j = 0; j < 3; j++) {
-                        if (digitRefs.rows[r][c][j].textContent !== v[j]) digitRefs.rows[r][c][j].textContent = v[j];
-                    }
+            tickClock();
+            var b1 = (vals[0]||"").toString().padStart(2,' ');
+            var b2 = (vals[1]||"").toString().padStart(2,' ');
+            for(var i=0; i<2; i++) { refs.b1[i].textContent = b1[i]; refs.b2[i].textContent = b2[i]; }
+            for(var r=0; r<4; r++) {
+                for(var c=0; c<3; c++) {
+                    var v = (vals[ROWS[r][c][1]]||"").toString().slice(-3).padStart(3,' ');
+                    document.getElementById('l-'+r+'-'+c).className = v.trim()==="" ? 'label inactive' : 'label';
+                    for(var j=0; j<3; j++) refs.rows[r][c][j].textContent = v[j];
                 }
             }
-            var d = new Date();
-            document.getElementById('last-update').textContent = "UPDATED: " + d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0') + ":" + d.getSeconds().toString().padStart(2, '0');
+            document.getElementById('last-update').textContent = "UPDATED: " + new Date().toLocaleTimeString();
         }
 
         function poll() {
             var url = (isUsingLocal ? LOCAL_URL : NPOINT_URL) + "?t=" + Date.now();
             var x = new XMLHttpRequest();
-            x.open('GET', url, true);
-            x.timeout = 2000;
+            x.open('GET', url, true); x.timeout = 2000;
             x.onreadystatechange = function () {
                 if (x.readyState === 4) {
                     if (x.status === 200) {
                         try { render(JSON.parse(x.responseText)); flash(isUsingLocal ? 'local' : 'cloud'); } catch (e) { flash('error'); }
                     } else if (isUsingLocal) {
-                        isUsingLocal = false; poll();
+                        isUsingLocal = false; switchInt(CLOUD_SPEED); poll();
                     }
                 }
             };
-            x.onerror = function() { if(isUsingLocal) { isUsingLocal = false; poll(); } };
+            x.onerror = function() { if(isUsingLocal) { isUsingLocal = false; switchInt(CLOUD_SPEED); poll(); } };
             x.send();
         }
+
+        function switchInt(ms) { if (currentInterval !== ms) { currentInterval = ms; clearInterval(pTimer); pTimer = setInterval(poll, ms); } }
 
         function flash(t) {
             var dot = document.getElementById('status-dot');
@@ -186,16 +166,15 @@
             setTimeout(function() { dot.classList.remove('dot-active'); }, 500);
         }
 
-        var isUsingLocal = true;
-        updateClock();
-        setInterval(updateClock, 1000); // Clock updates every second regardless of data
-        setInterval(poll, 1000);
+        initUI();
+        setInterval(tickClock, 1000);
+        var pTimer = setInterval(poll, currentInterval);
         poll();
 
         document.getElementById('fs-btn').onclick = function() {
             var e = document.documentElement;
-            if(e.requestFullscreen) e.requestFullscreen();
-            this.style.display = 'none';
+            var rfs = e.requestFullscreen || e.webkitRequestFullScreen || e.mozRequestFullScreen || e.msRequestFullscreen;
+            if(rfs) rfs.call(e); this.style.display = 'none';
         };
     </script>
 </body>
