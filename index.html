@@ -21,16 +21,15 @@
         
         #fs-btn { position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px; background: #1a1a1a; color: #555; border: 1px solid #333; z-index: 1000; font-size: 16px; cursor: pointer; border-radius: 4px; opacity: 0.6; }
         
-        /* Visibility Tweaks for Last Updated */
+        /* Fixed "Updated" Timestamp - Readable but subtle */
         #last-update { 
             position: fixed; 
-            bottom: 25px; /* Moved up to avoid TV edge cutoff */
+            bottom: 20px; 
             left: 50%; 
             transform: translateX(-50%); 
-            color: #888; /* Brightened from #444 */
-            font-size: 2vh; /* Increased from 1.5vh */
-            font-weight: normal; 
-            letter-spacing: 2px; 
+            color: #777; 
+            font-size: 1.8vh; 
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
@@ -61,6 +60,19 @@
         .label-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.2vh; }
         .label { font-size: 5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3vw; color: #CCC; width: 33%; text-align: center; display: block; white-space: nowrap; }
         .label.inactive { color: #111; }
+
+        /* Mobile Fixes - Prevents overlapping seen in screenshot */
+        @media (max-width: 600px) {
+            #board { width: 100vw; }
+            .label { font-size: 14px !important; letter-spacing: 0.5px !important; }
+            .digit, .digit-bg { font-size: 32px !important; line-height: 32px !important; }
+            .cell { height: 32px !important; width: 22px !important; }
+            .top-digit-wrap { height: 22px !important; width: 15px !important; }
+            .top-digit-wrap .digit, .top-digit-wrap .digit-bg { font-size: 18px !important; line-height: 22px !important; }
+            .clock-colon-wrap { width: 8px !important; height: 22px !important; }
+            .clock-colon-wrap .digit { font-size: 16px !important; line-height: 22px !important; }
+            #last-update { font-size: 10px; bottom: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -85,6 +97,7 @@
             [["To Win", 11],  ["Last Wkt", 9],["DLS Par", 13]]
         ];
 
+        // ES5 Polyfill
         if (!String.prototype.padStart) {
             String.prototype.padStart = function(targetLength, padString) {
                 targetLength = targetLength >> 0;
@@ -147,25 +160,6 @@
             }
         }
 
-        function updateTimestamp() {
-            var now = new Date();
-            var ts = "Updated: " + now.getHours().toString().padStart(2, '0') + ":" + 
-                     now.getMinutes().toString().padStart(2, '0') + ":" + 
-                     now.getSeconds().toString().padStart(2, '0');
-            document.getElementById('last-update').textContent = ts;
-        }
-
-        function flashStatus(type) {
-            var dot = document.getElementById('status-dot');
-            if (!dot) return;
-            dot.className = ''; 
-            if (type === 'local') dot.classList.add('dot-local');
-            else if (type === 'cloud') dot.classList.add('dot-cloud');
-            else if (type === 'error') dot.classList.add('dot-error');
-            dot.classList.add('dot-active');
-            setTimeout(function() { dot.classList.remove('dot-active'); }, 500);
-        }
-
         function renderBoard(vals) {
             var b1Str = (vals[0] || "").toString().padStart(2, ' ');
             var b2Str = (vals[1] || "").toString().padStart(2, ' ');
@@ -193,7 +187,8 @@
                     }
                 }
             }
-            updateTimestamp();
+            var ts = "Updated: " + now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0') + ":" + now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('last-update').textContent = ts;
         }
 
         function updateScore() {
@@ -220,6 +215,16 @@
                 clearInterval(pollTimer);
                 pollTimer = setInterval(updateScore, currentInterval);
             }
+        }
+
+        function flashStatus(type) {
+            var dot = document.getElementById('status-dot');
+            if (!dot) return;
+            dot.className = ''; 
+            if (type === 'local') dot.className = 'dot-local dot-active';
+            else if (type === 'cloud') dot.className = 'dot-cloud dot-active';
+            else if (type === 'error') dot.className = 'dot-error dot-active';
+            setTimeout(function() { dot.classList.remove('dot-active'); }, 500);
         }
 
         pollTimer = setInterval(updateScore, currentInterval);
