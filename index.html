@@ -163,16 +163,13 @@
         }
 
         function poll() {
+            // Cache-busting is handled by the "?t=" at the end of the URL
             var url = (isUsingLocal ? LOCAL_URL : NPOINT_URL) + "?t=" + Date.now();
+            
             x.abort(); 
             x.open('GET', url, true);
-            x.timeout = 3000;
-            
-            // Anti-caching headers for TV browsers
-            x.setRequestHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-            x.setRequestHeader("Pragma", "no-cache");
-            x.setRequestHeader("Expires", "0");
-
+            x.timeout = 2500;
+        
             x.onreadystatechange = function () {
                 if (x.readyState === 4) {
                     if (x.status === 200) {
@@ -181,22 +178,30 @@
                             flash(isUsingLocal ? 'local' : 'cloud'); 
                         } catch (e) { flash('error'); }
                     } else if (isUsingLocal) {
+                        // If local fails (status 0 or 404), flip to cloud
+                        console.log("Local fail, switching to cloud...");
                         isUsingLocal = false; 
                         currentInterval = CLOUD_SPEED;
                     }
-                    // Wait until current request finishes before scheduling next one
+                    
+                    // Re-schedule next poll
                     clearTimeout(pollTimer);
                     pollTimer = setTimeout(poll, currentInterval);
                 }
             };
+        
             x.onerror = function() { 
-                if(isUsingLocal) { isUsingLocal = false; currentInterval = CLOUD_SPEED; } 
-                clearTimeout(pollTimer);
-                pollTimer = setTimeout(poll, currentInterval);
+                if(isUsingLocal) { 
+                    isUsingLocal = false; 
+                    currentInterval = CLOUD_SPEED; 
+                    clearTimeout(pollTimer);
+                    pollTimer = setTimeout(poll, currentInterval);
+                }
             };
-            x.send();
+            
+            x.send(); // No custom headers here = No Preflight issues!
         }
-
+        
         function flash(t) {
             var dot = document.getElementById('status-dot');
             if (!dot) return;
