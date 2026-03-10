@@ -199,8 +199,26 @@
             dot.className = 'dot-' + t + ' dot-active';
             setTimeout(function() { dot.classList.remove('dot-active'); }, 500);
         }
-
+        var fsBtn = document.getElementById('fs-btn');
+        
+        function hideFsBtn() {
+            setTimeout(function() {
+                fsBtn.style.transition = 'opacity 1s';
+                fsBtn.style.opacity = '0';
+                setTimeout(function() { fsBtn.style.display = 'none'; }, 1000);
+            }, 10000); // 10 seconds
+        }
+        
+        fsBtn.onclick = function() {
+            var e = document.documentElement;
+            var rfs = e.requestFullscreen || e.webkitRequestFullScreen || e.mozRequestFullScreen || e.msRequestFullscreen;
+            if(rfs) rfs.call(e);
+            this.style.display = 'none';
+        };
+        
+        // Start the timer on load
         initUI();
+        hideFsBtn();
         setInterval(tickClock, 1000);
         pollTimer = setInterval(poll, currentInterval);
         poll();
@@ -210,6 +228,7 @@
             var rfs = e.requestFullscreen || e.webkitRequestFullScreen || e.mozRequestFullScreen || e.msRequestFullscreen;
             if(rfs) rfs.call(e); this.style.display = 'none';
         };
+        
     </script>
 </body>
 </html>
